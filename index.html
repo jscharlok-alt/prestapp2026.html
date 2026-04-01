@@ -3,9 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="PrestApp">
 <title>PrestApp</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
@@ -13,401 +10,82 @@
   --bg:#F7F6F2;--bg2:#fff;--border:rgba(0,0,0,0.09);
   --text:#1A1A18;--text2:#6B6A65;--text3:#9E9D98;
   --teal:#0F6E56;--teal-bg:#E1F5EE;--teal-text:#085041;
-  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-text:#0C447C;
   --red:#A32D2D;--red-bg:#FCEBEB;--red-text:#791F1F;
-  --amber:#854F0B;--amber-bg:#FAEEDA;--amber-text:#633806;
-  --nequi:#6B21A8;--nequi-bg:#F3E8FF;
-  --banco:#003D99;--banco-bg:#EEF2FF;
   --r:12px;--rs:8px;--f:'DM Sans',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--f);background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden}
 
-/* AUTH */
-#auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
-.auth-logo{font-size:28px;font-weight:600;letter-spacing:-.5px;margin-bottom:4px}
+/* AUTH SCREENS */
+#auth-screen, #pending-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center}
+.auth-logo{font-size:28px;font-weight:600;margin-bottom:4px}
 .auth-logo span{color:var(--teal)}
-.auth-sub{font-size:13px;color:var(--text2);margin-bottom:32px}
-.auth-card{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px}
-.auth-title{font-size:16px;font-weight:600;margin-bottom:16px}
+.auth-card{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;text-align:left}
 .auth-tabs{display:flex;gap:6px;margin-bottom:16px}
-.auth-tab{flex:1;padding:8px;border:1px solid var(--border);border-radius:var(--rs);background:transparent;font-family:var(--f);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer}
-.auth-tab.active{background:var(--teal);color:#fff;border-color:var(--teal)}
-.auth-group{margin-bottom:12px}
-.auth-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;display:block}
-.auth-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;font-family:var(--f);background:var(--bg);color:var(--text);outline:none}
-.auth-input:focus{border-color:var(--teal);background:var(--bg2)}
-.auth-btn{width:100%;padding:12px;border-radius:var(--r);border:none;background:var(--teal);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--f);margin-top:4px}
-.auth-btn:active{opacity:.85}
-.auth-error{background:var(--red-bg);color:var(--red-text);border-radius:var(--rs);padding:9px 12px;font-size:13px;margin-bottom:10px;display:none}
-.auth-info{background:var(--teal-bg);color:var(--teal-text);border-radius:var(--rs);padding:9px 12px;font-size:12px;margin-top:10px;line-height:1.5;display:none}
+.auth-tab{flex:1;padding:8px;border:1px solid var(--border);border-radius:var(--rs);background:transparent;font-size:13px;cursor:pointer}
+.auth-tab.active{background:var(--teal);color:#fff}
+.auth-input{width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--rs);margin-bottom:12px;outline:none}
+.auth-btn{width:100%;padding:12px;border-radius:var(--r);border:none;background:var(--teal);color:#fff;font-weight:600;cursor:pointer}
+.auth-error{background:var(--red-bg);color:var(--red-text);padding:10px;border-radius:var(--rs);margin-bottom:10px;display:none;font-size:13px}
 
-/* PENDING */
-#pending-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center}
-.pending-icon{font-size:48px;margin-bottom:16px}
-.pending-title{font-size:18px;font-weight:600;margin-bottom:8px}
-.pending-sub{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px}
-.pending-btn{padding:10px 24px;border-radius:var(--r);border:1px solid var(--border);background:transparent;font-family:var(--f);font-size:14px;cursor:pointer}
-
-/* APP */
+/* APP LAYOUT */
 #app-screen{display:none}
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.topbar-brand{font-size:17px;font-weight:600;letter-spacing:-.3px}
-.topbar-brand span{color:var(--teal)}
-.topbar-right{display:flex;align-items:center;gap:8px}
-.role-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px}
-.role-owner{background:#EEEDFE;color:#3C3489}
-.role-employee{background:var(--teal-bg);color:var(--teal-text)}
-.role-client{background:var(--blue-bg);color:var(--blue-text)}
-.logout-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text2);font-family:var(--f)}
-
-.nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:53px;z-index:49;overflow-x:auto}
-.nav-btn{flex:1;min-width:48px;padding:8px 3px 7px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:var(--f);font-size:9px;font-weight:500;color:var(--text3);display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .15s;white-space:nowrap}
-.nav-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.nav-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
-
-.screen{display:none;padding:14px;padding-bottom:30px}
-.screen.active{display:block}
-
-/* COMPONENTS */
-.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px}
-.metric-lbl{font-size:11px;color:var(--text2);margin-bottom:4px}
-.metric-val{font-size:19px;font-weight:600;letter-spacing:-.4px}
-.metric-val.success{color:var(--teal)}.metric-val.danger{color:var(--red)}.metric-val.info{color:var(--blue)}
-.sec-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-.card-list{display:flex;flex-direction:column;gap:6px}
-.client-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:11px}
-.client-card:active{background:var(--bg)}
-.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0}
-.client-info{flex:1;min-width:0}
-.client-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.client-meta{font-size:12px;color:var(--text2);margin-top:1px}
-.badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
-.badge-green{background:var(--teal-bg);color:var(--teal-text)}
-.badge-red{background:var(--red-bg);color:var(--red-text)}
-.badge-amber{background:var(--amber-bg);color:var(--amber-text)}
-.cobro-list{display:flex;flex-direction:column;gap:6px}
-.cobro-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;display:flex;align-items:center;gap:10px}
-.cobro-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot-green{background:var(--teal)}.dot-red{background:var(--red)}
-.cobro-info{flex:1}.cobro-name{font-size:13px;font-weight:500}.cobro-date{font-size:11px;color:var(--text2);margin-top:1px}.cobro-monto{font-size:13px;font-weight:600}
-.form-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
-.form-title{font-size:15px;font-weight:600;margin-bottom:13px}
-.form-group{margin-bottom:11px}.form-group:last-child{margin-bottom:0}
-.form-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px;display:block}
-input,select{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;font-family:var(--f);background:var(--bg);color:var(--text);outline:none;transition:border-color .15s;-webkit-appearance:none}
-input:focus,select:focus{border-color:var(--teal);background:var(--bg2)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.resumen-box{background:var(--teal-bg);border-radius:var(--rs);padding:9px 11px;font-size:12px;color:var(--teal-text);margin-top:9px;display:none}
-.btn-primary{width:100%;padding:12px;border-radius:var(--r);border:none;background:var(--teal);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--f);margin-top:4px}
-.btn-primary:active{opacity:.85}
-.btn-ghost{width:100%;padding:11px;border-radius:var(--r);border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--f);margin-top:6px}
-.btn-ghost:active{background:var(--bg)}
-.btn-pay{width:100%;padding:12px;border-radius:var(--r);border:none;background:var(--teal-bg);color:var(--teal-text);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--f);margin-top:10px}
-.back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--teal);padding:0;font-family:var(--f);font-weight:500;margin-bottom:13px;display:flex;align-items:center;gap:4px}
-.detail-header{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px;display:flex;align-items:center;gap:11px;margin-bottom:8px}
-.detail-name{font-size:16px;font-weight:600}.detail-meta{font-size:12px;color:var(--text2);margin-top:2px}
-.detail-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:13px}
-.det-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 7px;text-align:center}
-.det-stat-lbl{font-size:10px;color:var(--text2)}.det-stat-val{font-size:13px;font-weight:600;margin-top:3px}.det-stat-val.danger{color:var(--red)}
-.pagos-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px}
-.pagos-title{font-size:13px;font-weight:600;margin-bottom:9px}
-.pago-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
-.pago-row:last-child{border-bottom:none;padding-bottom:0}
-.pago-cuota{color:var(--text2);font-size:12px}.pago-ok{color:var(--teal);font-weight:500}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
-.cal-nav{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:5px 13px;cursor:pointer;font-family:var(--f);font-size:15px;color:var(--text)}
-.cal-titulo{font-size:14px;font-weight:600}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:13px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px}
-.cal-dname{font-size:10px;color:var(--text2);text-align:center;padding:2px 0 5px;font-weight:500}
-.cal-day{font-size:12px;text-align:center;padding:5px 2px;border-radius:6px;min-height:26px;line-height:1.2;transition:background .1s}
-.cal-day.has-cobro{background:var(--teal-bg);color:var(--teal-text);font-weight:600}
-.cal-day.mora{background:var(--red-bg);color:var(--red-text);font-weight:600}
-.cal-day.today{outline:2px solid var(--teal);outline-offset:-1px}
-
-/* GANANCIAS */
-.gan-tabs{display:flex;gap:6px;margin-bottom:13px}
-.gan-tab{flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg2);font-family:var(--f);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;text-align:center}
-.gan-tab.active{background:var(--teal);color:#fff;border-color:var(--teal)}
-.gan-section{display:none}.gan-section.active{display:block}
-.gan-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
-.gan-metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px}
-.gan-metric-lbl{font-size:11px;color:var(--text2);margin-bottom:4px}
-.gan-metric-val{font-size:17px;font-weight:600;letter-spacing:-.3px}
-.gan-metric-val.success{color:var(--teal)}.gan-metric-val.info{color:var(--blue)}
-.bar-chart{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:11px}
-.bar-chart-title{font-size:13px;font-weight:600;margin-bottom:11px}
-.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
-.bar-label{font-size:10px;color:var(--text2);width:55px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar-track{flex:1;height:16px;background:var(--bg);border-radius:4px;overflow:hidden}
-.bar-fill{height:100%;border-radius:4px;transition:width .5s ease;background:var(--teal)}
-.bar-fill.proj{background:var(--blue-bg);border:1px dashed var(--blue-text)}
-.bar-val{font-size:11px;font-weight:500;width:68px;text-align:right;flex-shrink:0;color:var(--text2)}
-.proy-table{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:11px}
-.proy-head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 11px;background:var(--bg);border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text2)}
-.proy-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 11px;border-bottom:1px solid var(--border);font-size:11px;align-items:center}
-.proy-row:last-child{border-bottom:none}.proy-row.mora-row{background:var(--red-bg)}.proy-row.pagado{opacity:.5}
-.cuota-badge{font-size:10px;padding:2px 6px;border-radius:10px;white-space:nowrap}
-.c-pend{background:var(--amber-bg);color:var(--amber-text)}.c-paid{background:var(--teal-bg);color:var(--teal-text)}.c-mora{background:var(--red-bg);color:var(--red-text)}.c-fut{background:var(--bg);color:var(--text2)}
-
-/* COBRAR */
-.pay-methods{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:13px}
-.pay-method-btn{border:2px solid var(--border);border-radius:var(--r);padding:11px 6px;background:var(--bg2);cursor:pointer;text-align:center;font-family:var(--f)}
-.pay-method-btn.sel-nequi{border-color:var(--nequi);background:var(--nequi-bg)}
-.pay-method-btn.sel-banco{border-color:var(--banco);background:var(--banco-bg)}
-.pay-method-btn.sel-efectivo{border-color:var(--teal);background:var(--teal-bg)}
-.pay-method-icon{font-size:20px;margin-bottom:4px}
-.pay-method-name{font-size:11px;font-weight:600;color:var(--text2)}
-.pay-method-btn.sel-nequi .pay-method-name{color:var(--nequi)}
-.pay-method-btn.sel-banco .pay-method-name{color:var(--banco)}
-.pay-method-btn.sel-efectivo .pay-method-name{color:var(--teal)}
-.qr-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;text-align:center;margin-bottom:11px}
-.qr-title{font-size:14px;font-weight:600;margin-bottom:3px}.qr-sub{font-size:12px;color:var(--text2);margin-bottom:14px}
-.qr-svg-wrap{display:inline-block;padding:10px;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:13px}
-.qr-info-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
-.qr-info-row:last-child{border-bottom:none}.qr-info-lbl{color:var(--text2)}.qr-info-val{font-weight:500}
-.efectivo-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px 18px;text-align:center;margin-bottom:11px}
-.efectivo-amount{font-size:32px;font-weight:600;color:var(--teal);margin:10px 0 4px;letter-spacing:-1px}
-.info-note{border-radius:var(--rs);padding:9px 11px;font-size:12px;line-height:1.6}
-
-/* ADMIN USUARIOS */
-.user-row{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.user-info{flex:1;min-width:0}
-.user-name{font-size:13px;font-weight:500}
-.user-email{font-size:11px;color:var(--text2)}
-.role-select{padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--f);background:var(--bg);color:var(--text);outline:none;width:auto}
-
-/* CLIENTE PORTAL */
-.portal-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px}
-.portal-card-title{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text2)}
-
-/* LOADER */
-.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}
+.spinner{width:30px;height:30px;border:3px solid #ddd;border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:opacity .25s,transform .25s;z-index:200;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.empty{text-align:center;color:var(--text2);font-size:13px;padding:26px 14px}
 </style>
 </head>
 <body>
 
-<!-- LOADER -->
-<div class="loader" id="loader">
-  <div class="spinner"></div>
-  <div style="font-size:13px;color:var(--color-text-secondary)">Cargando...</div>
-</div>
+<div id="loader" class="loader"><div class="spinner"></div></div>
 
-<!-- AUTH -->
-<div id="auth-screen" style="display:none">
+<div id="auth-screen">
   <div class="auth-logo">Prest<span>App</span></div>
-  <div class="auth-sub">Sistema de gestión de préstamos</div>
+  <p style="margin-bottom:20px; color:var(--text2)">Gestión de préstamos</p>
   <div class="auth-card">
     <div class="auth-tabs">
-      <button class="auth-tab active" onclick="authTab('login',this)">Iniciar sesión</button>
-      <button class="auth-tab" onclick="authTab('register',this)">Registrarse</button>
+      <button class="auth-tab active" id="tab-l" onclick="showAuth('login')">Ingresar</button>
+      <button class="auth-tab" id="tab-r" onclick="showAuth('register')">Registrarse</button>
     </div>
     <div id="auth-error" class="auth-error"></div>
     <div id="login-form">
-      <div class="auth-group"><label class="auth-label">Correo electrónico</label><input id="l-email" type="email" placeholder="tu@correo.com" class="auth-input"></div>
-      <div class="auth-group"><label class="auth-label">Contraseña</label><input id="l-pass" type="password" placeholder="••••••••" class="auth-input"></div>
-      <button class="auth-btn" onclick="doLogin()">Ingresar</button>
+      <input id="l-email" type="email" placeholder="Correo" class="auth-input">
+      <input id="l-pass" type="password" placeholder="Contraseña" class="auth-input">
+      <button class="auth-btn" onclick="doLogin()">Entrar</button>
     </div>
     <div id="register-form" style="display:none">
-      <div class="auth-group"><label class="auth-label">Nombre completo</label><input id="r-name" type="text" placeholder="Tu nombre" class="auth-input"></div>
-      <div class="auth-group"><label class="auth-label">Cédula</label><input id="r-cedula" type="text" placeholder="Número de cédula" class="auth-input"></div>
-      <div class="auth-group"><label class="auth-label">Correo electrónico</label><input id="r-email" type="email" placeholder="tu@correo.com" class="auth-input"></div>
-      <div class="auth-group"><label class="auth-label">Contraseña</label><input id="r-pass" type="password" placeholder="Mínimo 6 caracteres" class="auth-input"></div>
+      <input id="r-name" type="text" placeholder="Nombre" class="auth-input">
+      <input id="r-email" type="email" placeholder="Correo" class="auth-input">
+      <input id="r-pass" type="password" placeholder="Clave (min 6)" class="auth-input">
       <button class="auth-btn" onclick="doRegister()">Crear cuenta</button>
-      <div id="auth-info" class="auth-info">Tu cuenta fue creada. El administrador asignará tu rol pronto.</div>
     </div>
   </div>
 </div>
 
-<!-- PENDING APPROVAL -->
-<div id="pending-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center">
-  <div style="font-size:48px;margin-bottom:16px">⏳</div>
-  <div style="font-size:18px;font-weight:600;margin-bottom:8px">Cuenta pendiente</div>
-  <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px">Tu cuenta fue creada correctamente.<br>El administrador asignará tu rol y podrás acceder pronto.</div>
-  <button class="pending-btn" onclick="doLogout()" style="padding:10px 24px;border-radius:var(--r);border:1px solid var(--border);background:transparent;font-family:var(--f);font-size:14px;cursor:pointer">Cerrar sesión</button>
+<div id="pending-screen">
+  <div style="font-size:40px">⏳</div>
+  <h2>Cuenta en espera</h2>
+  <p>El administrador debe activarte.</p>
+  <button onclick="doLogout()" style="margin-top:20px">Cerrar sesión</button>
 </div>
 
-<!-- APP -->
-<div id="app-screen" style="display:none">
+<div id="app-screen">
   <div class="topbar">
-    <div class="topbar-brand">Prest<span>App</span></div>
-    <div class="topbar-right">
-      <span class="role-badge" id="role-badge"></span>
-      <button class="logout-btn" onclick="doLogout()">Salir</button>
-    </div>
+    <div class="auth-logo">Prest<span>App</span></div>
+    <button onclick="doLogout()" style="background:none; border:none; color:var(--red)">Salir</button>
   </div>
-  <div class="nav" id="main-nav"></div>
-
-  <!-- INICIO -->
-  <div class="screen active" id="screen-inicio">
-    <div class="metrics">
-      <div class="metric"><div class="metric-lbl">Cartera activa</div><div class="metric-val" id="m-cartera">$0</div></div>
-      <div class="metric"><div class="metric-lbl">Cobros hoy</div><div class="metric-val success" id="m-hoy">$0</div></div>
-      <div class="metric"><div class="metric-lbl">Clientes</div><div class="metric-val" id="m-clientes">0</div></div>
-      <div class="metric"><div class="metric-lbl">En mora</div><div class="metric-val danger" id="m-mora">0</div></div>
-    </div>
-    <div class="sec-title">Próximos cobros</div>
-    <div id="proximos-list" class="cobro-list"></div>
-  </div>
-
-  <!-- CLIENTES -->
-  <div class="screen" id="screen-clientes">
-    <div id="client-list" class="card-list"></div>
-    <button class="btn-ghost" style="margin-top:10px" id="btn-nuevo-cliente">+ Nuevo cliente</button>
-  </div>
-
-  <!-- DETALLE CLIENTE -->
-  <div class="screen" id="screen-detalle">
-    <button class="back-btn" onclick="showScreen('clientes')">← Volver</button>
-    <div class="detail-header">
-      <div class="avatar" id="det-avatar" style="width:44px;height:44px;font-size:14px"></div>
-      <div><div class="detail-name" id="det-nombre"></div><div class="detail-meta" id="det-tel"></div></div>
-    </div>
-    <div class="detail-stats">
-      <div class="det-stat"><div class="det-stat-lbl">Préstamo</div><div class="det-stat-val" id="det-monto"></div></div>
-      <div class="det-stat"><div class="det-stat-lbl">Cuotas</div><div class="det-stat-val" id="det-cuotas"></div></div>
-      <div class="det-stat"><div class="det-stat-lbl">Saldo</div><div class="det-stat-val danger" id="det-saldo"></div></div>
-    </div>
-    <div class="pagos-box">
-      <div class="pagos-title">Historial de pagos</div>
-      <div id="pagos-list"></div>
-    </div>
-    <button class="btn-pay" id="btn-registrar-pago">Registrar pago de cuota</button>
-    <button class="btn-ghost" id="btn-cobrar-cliente" style="margin-top:8px">Mostrar QR / cobrar</button>
-  </div>
-
-  <!-- NUEVO CLIENTE -->
-  <div class="screen" id="screen-nuevo-cliente">
-    <div class="form-section">
-      <div class="form-title">Nuevo cliente</div>
-      <div class="form-group"><label class="form-label">Nombre completo *</label><input id="nc-nombre" type="text" placeholder="Ej: María García"></div>
-      <div class="form-group"><label class="form-label">Cédula *</label><input id="nc-cedula" type="text" placeholder="Ej: 1234567890"></div>
-      <div class="form-group"><label class="form-label">Teléfono</label><input id="nc-tel" type="tel" placeholder="Ej: 3001234567"></div>
-      <div class="form-group"><label class="form-label">Dirección</label><input id="nc-dir" type="text" placeholder="Barrio / Ciudad"></div>
-    </div>
-    <button class="btn-primary" onclick="guardarCliente()">Guardar cliente</button>
-    <button class="btn-ghost" onclick="showScreen('clientes')">Cancelar</button>
-  </div>
-
-  <!-- NUEVO PRÉSTAMO -->
-  <div class="screen" id="screen-nuevo-prestamo">
-    <div class="form-section">
-      <div class="form-title">Nuevo préstamo</div>
-      <div class="form-group"><label class="form-label">Cliente *</label><select id="np-cliente"><option value="">Seleccionar...</option></select></div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Monto ($) *</label><input id="np-monto" type="number" placeholder="500000" oninput="actualizarResumen()"></div>
-        <div class="form-group"><label class="form-label">Interés (%)</label><input id="np-interes" type="number" value="10" oninput="actualizarResumen()"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">N° cuotas</label><input id="np-cuotas" type="number" value="12" oninput="actualizarResumen()"></div>
-        <div class="form-group"><label class="form-label">Frecuencia</label>
-          <select id="np-freq"><option value="mensual">Mensual</option><option value="quincenal">Quincenal</option><option value="semanal">Semanal</option></select>
-        </div>
-      </div>
-      <div class="form-group"><label class="form-label">Fecha inicio *</label><input id="np-fecha" type="date"></div>
-      <div class="resumen-box" id="resumen-prestamo"></div>
-    </div>
-    <button class="btn-primary" onclick="guardarPrestamo()">Crear préstamo</button>
-    <button class="btn-ghost" onclick="showScreen('inicio')">Cancelar</button>
-  </div>
-
-  <!-- CALENDARIO -->
-  <div class="screen" id="screen-calendario">
-    <div class="cal-header">
-      <button class="cal-nav" onclick="cambiarMes(-1)">‹</button>
-      <span class="cal-titulo" id="cal-titulo"></span>
-      <button class="cal-nav" onclick="cambiarMes(1)">›</button>
-    </div>
-    <div class="cal-grid" id="cal-grid"></div>
-    <div class="sec-title">Cobros del mes</div>
-    <div id="cobros-mes" class="cobro-list"></div>
-  </div>
-
-  <!-- GANANCIAS (solo dueño) -->
-  <div class="screen" id="screen-ganancias">
-    <div class="gan-tabs">
-      <button class="gan-tab active" onclick="ganTab('resumen',this)">Resumen</button>
-      <button class="gan-tab" onclick="ganTab('proyeccion',this)">Proyección</button>
-      <button class="gan-tab" onclick="ganTab('cuotas',this)">Cuotas</button>
-    </div>
-    <div class="gan-section active" id="gs-resumen">
-      <div class="gan-metrics">
-        <div class="gan-metric"><div class="gan-metric-lbl">Capital prestado</div><div class="gan-metric-val" id="g-capital">$0</div></div>
-        <div class="gan-metric"><div class="gan-metric-lbl">Ganancia cobrada</div><div class="gan-metric-val success" id="g-cobrado">$0</div></div>
-        <div class="gan-metric"><div class="gan-metric-lbl">Ganancia pendiente</div><div class="gan-metric-val info" id="g-pendiente">$0</div></div>
-        <div class="gan-metric"><div class="gan-metric-lbl">Ganancia total</div><div class="gan-metric-val success" id="g-total">$0</div></div>
-      </div>
-      <div class="bar-chart"><div class="bar-chart-title">Ganancia por préstamo</div><div id="bar-prestamos"></div></div>
-    </div>
-    <div class="gan-section" id="gs-proyeccion">
-      <div class="gan-metrics">
-        <div class="gan-metric"><div class="gan-metric-lbl">Este mes</div><div class="gan-metric-val success" id="g-mes0">$0</div></div>
-        <div class="gan-metric"><div class="gan-metric-lbl">Próx. 3 meses</div><div class="gan-metric-val info" id="g-mes3">$0</div></div>
-      </div>
-      <div class="bar-chart"><div class="bar-chart-title">Proyección 6 meses</div><div id="bar-proyeccion"></div></div>
-      <div class="form-section">
-        <div class="form-title" style="font-size:13px;margin-bottom:10px">Simulador</div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Monto ($)</label><input id="sim-monto" type="number" placeholder="1000000" oninput="simular()"></div>
-          <div class="form-group"><label class="form-label">Interés (%)</label><input id="sim-interes" type="number" value="10" oninput="simular()"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">N° cuotas</label><input id="sim-cuotas" type="number" value="12" oninput="simular()"></div>
-          <div class="form-group"><label class="form-label">Frecuencia</label><select id="sim-freq" onchange="simular()"><option value="mensual">Mensual</option><option value="quincenal">Quincenal</option><option value="semanal">Semanal</option></select></div>
-        </div>
-        <div id="sim-resultado" style="display:none;margin-top:10px;background:var(--teal-bg);border-radius:8px;padding:11px;font-size:13px;color:var(--teal-text);line-height:1.7"></div>
-      </div>
-    </div>
-    <div class="gan-section" id="gs-cuotas">
-      <div class="form-group" style="margin-bottom:11px"><label class="form-label">Préstamo</label><select id="cuotas-select" onchange="renderCuotas()"><option value="">Todos los activos</option></select></div>
-      <div id="cuotas-table"></div>
-    </div>
-  </div>
-
-  <!-- COBRAR -->
-  <div class="screen" id="screen-cobrar">
-    <div class="form-section" style="margin-bottom:11px">
-      <div class="form-title" style="margin-bottom:10px">Mis datos de cobro</div>
-      <div class="form-group"><label class="form-label">Número Nequi</label><input id="cfg-nequi" type="tel" placeholder="3001234567" oninput="saveConfig()"></div>
-      <div class="form-group"><label class="form-label">Número / Cuenta Bancolombia</label><input id="cfg-banco" type="text" placeholder="123456789" oninput="saveConfig()"></div>
-      <div class="form-group"><label class="form-label">Nombre titular</label><input id="cfg-nombre" type="text" placeholder="Tu nombre completo" oninput="saveConfig()"></div>
-      <div class="form-group"><label class="form-label">Instrucción efectivo</label><input id="cfg-efectivo" type="text" placeholder="Ej: Visita mi local en calle 10" oninput="saveConfig()"></div>
-    </div>
-    <div class="form-group" style="margin-bottom:11px"><label class="form-label">Monto a cobrar (opcional)</label><input id="pay-monto-input" type="number" placeholder="Ej: 137500" oninput="renderPayDetail()"></div>
-    <div class="pay-methods">
-      <button class="pay-method-btn" id="pm-nequi" onclick="selectPay('nequi')"><div class="pay-method-icon">💜</div><div class="pay-method-name">Nequi</div></button>
-      <button class="pay-method-btn" id="pm-banco" onclick="selectPay('banco')"><div class="pay-method-icon">🏦</div><div class="pay-method-name">Bancolombia</div></button>
-      <button class="pay-method-btn" id="pm-efectivo" onclick="selectPay('efectivo')"><div class="pay-method-icon">💵</div><div class="pay-method-name">Efectivo</div></button>
-    </div>
-    <div id="pay-detail-area"></div>
-  </div>
-
-  <!-- PORTAL CLIENTE -->
-  <div class="screen" id="screen-portal-cliente">
-    <div id="portal-content"></div>
-  </div>
-
-  <!-- ADMIN USUARIOS (solo dueño) -->
-  <div class="screen" id="screen-usuarios">
-    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Asigna el rol a cada usuario registrado.</div>
-    <div id="users-list"></div>
+  <div style="padding:20px">
+    <h3>Bienvenido</h3>
+    <p id="user-name-display"></p>
+    <div id="role-display" style="margin-top:10px; font-weight:bold; color:var(--teal)"></div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
-<!-- Firebase SDKs -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, query, where, getDocs, onSnapshot, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw",
@@ -422,110 +100,73 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ---- STATE ----
-let currentUser = null;
-let currentRole = null;
-let currentProfile = null;
-let clientes = [];
-let prestamos = [];
-let pagos = [];
-let payMethod = 'nequi';
-let cfg = {nequi:'',banco:'',nombre:'',efectivo:''};
-let calMes = new Date().getMonth();
-let calAnio = new Date().getFullYear();
-let clienteActivo = null;
-let unsubClientes, unsubPrestamos, unsubPagos;
-
-const avC = [{bg:'#EEEDFE',c:'#3C3489'},{bg:'#E1F5EE',c:'#085041'},{bg:'#FAECE7',c:'#712B13'},{bg:'#E6F1FB',c:'#0C447C'},{bg:'#FAEEDA',c:'#633806'},{bg:'#FBEAF0',c:'#72243E'}];
-
-// ---- HELPERS ----
-const fmt = n => new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);
-const fmtD = d => { if(!d) return ''; const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
-const initials = n => n.split(' ').slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
-const v = id => document.getElementById(id).value.trim();
-const $ = id => document.getElementById(id);
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
-function showEl(id, flex=false){ const e=$(id); if(e) e.style.display=flex?'flex':'block'; }
-function hideEl(id){ const e=$(id); if(e) e.style.display='none'; }
-
-const pg = pagos.filter(x => x.prestamoId === p.id).length;
-  const totalConInteres = p.monto * (1 + p.interes / 100);
-  const valorCuota = totalConInteres / p.cuotas;
-  return Math.max(0, Math.round(totalConInteres - (pg * valorCuota)));
-}
-
-function ganTotal(p) { 
-  return Math.round(p.monto * (p.interes / 100)); 
-}
-
-// --- LÓGICA DE LOGIN Y BOTONES ---
+// Funciones globales para los botones
+window.showAuth = (type) => {
+  document.getElementById('login-form').style.display = type === 'login' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = type === 'login' ? 'none' : 'block';
+  document.getElementById('tab-l').classList.toggle('active', type === 'login');
+  document.getElementById('tab-r').classList.toggle('active', type === 'register');
+};
 
 window.doLogin = async () => {
-    const email = v('l-email');
-    const pass = v('l-pass');
-    if (!email || !pass) return toast("Ingresa correo y contraseña");
-    
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        toast("Ingresando...");
-    } catch (e) {
-        console.error(e);
-        const errEl = document.getElementById('auth-error');
-        errEl.textContent = "Error: Usuario o clave incorrectos";
-        errEl.style.display = 'block';
-    }
+  const email = document.getElementById('l-email').value;
+  const pass = document.getElementById('l-pass').value;
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    showError("Correo o clave incorrectos");
+  }
 };
 
 window.doRegister = async () => {
-    const name = v('r-name'), cedula = v('r-cedula'), email = v('r-email'), pass = v('r-pass');
-    if (!name || !cedula || !email || !pass) return toast("Completa todos los campos");
-    
-    try {
-        const res = await createUserWithEmailAndPassword(auth, email, pass);
-        await setDoc(doc(db, "users", res.user.uid), {
-            name, cedula, email, role: 'pending', createdAt: serverTimestamp()
-        });
-        document.getElementById('auth-info').style.display = 'block';
-    } catch (e) {
-        const errEl = document.getElementById('auth-error');
-        errEl.textContent = "Error al registrarse";
-        errEl.style.display = 'block';
-    }
+  const name = document.getElementById('r-name').value;
+  const email = document.getElementById('r-email').value;
+  const pass = document.getElementById('r-pass').value;
+  if(!name || !email || pass.length < 6) return showError("Datos incompletos o clave corta");
+  try {
+    const res = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db, "users", res.user.uid), {
+      name, email, role: 'pending', createdAt: serverTimestamp()
+    });
+  } catch (e) {
+    showError("Error al registrarse");
+  }
 };
-
-window.authTab = (type, btn) => {
-    document.getElementById('login-form').style.display = 'none';
-    document.getElementById('register-form').style.display = 'none';
-    document.getElementById('auth-error').style.display = 'none';
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(type + '-form').style.display = 'block';
-};
-
-onAuthStateChanged(auth, async (user) => {
-    document.getElementById('loader').style.display = 'none';
-    if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            if (userData.role === 'pending') {
-                document.getElementById('pending-screen').style.display = 'flex';
-                document.getElementById('auth-screen').style.display = 'none';
-            } else {
-                document.getElementById('app-screen').style.display = 'block';
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('role-badge').textContent = userData.role;
-            }
-        }
-    } else {
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('app-screen').style.display = 'none';
-        document.getElementById('pending-screen').style.display = 'none';
-    }
-});
 
 window.doLogout = () => signOut(auth);
 
+function showError(m) {
+  const e = document.getElementById('auth-error');
+  e.textContent = m;
+  e.style.display = 'block';
+}
+
+// Observador de estado
+onAuthStateChanged(auth, async (user) => {
+  document.getElementById('loader').style.display = 'none';
+  if (user) {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      if (data.role === 'pending') {
+        document.getElementById('pending-screen').style.display = 'flex';
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'none';
+      } else {
+        document.getElementById('app-screen').style.display = 'block';
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('pending-screen').style.display = 'none';
+        document.getElementById('user-name-display').textContent = "Hola, " + data.name;
+        document.getElementById('role-display').textContent = "Rol: " + data.role;
+      }
+    }
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('pending-screen').style.display = 'none';
+  }
+});
 </script>
 </body>
   
+</html>
