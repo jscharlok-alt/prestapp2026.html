@@ -448,490 +448,84 @@ function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('sho
 function showEl(id, flex=false){ const e=$(id); if(e) e.style.display=flex?'flex':'block'; }
 function hideEl(id){ const e=$(id); if(e) e.style.display='none'; }
 
-function saldo(p){
-  const pg = pagos.filter(x=>x.prestamoId===p.id).length;
-  return Math.max(0, Math.round((p.cuotas-pg)*p.monto*(1+p.interes/100)/p.cuotas));
+const pg = pagos.filter(x => x.prestamoId === p.id).length;
+  const totalConInteres = p.monto * (1 + p.interes / 100);
+  const valorCuota = totalConInteres / p.cuotas;
+  return Math.max(0, Math.round(totalConInteres - (pg * valorCuota)));
 }
-function ganTotal(p){ return Math.round(p.monto*p.interes/100); }
-function ganRecibida(p){ const pg=pagos.filter(x=>x.prestamoId===p.id).length; return Math.round(pg*ganTotal(p)/p.cuotas); }
-function esMora(p){
-  const pg=pagos.filter(x=>x.prestamoId===p.id).length;
-  if(pg>=p.cuotas) return false;
-  const h=new Date(); h.setHours(0,0,0,0);
-  const d=p.freq==='mensual'?30:p.freq==='quincenal'?15:7;
-  return h>new Date(new Date(p.fecha).getTime()+pg*d*864e5);
-}
-function proxCuota(p){
-  const pg=pagos.filter(x=>x.prestamoId===p.id).length;
-  if(pg>=p.cuotas) return null;
-  const d=p.freq==='mensual'?30:p.freq==='quincenal'?15:7;
-  return new Date(new Date(p.fecha).getTime()+pg*d*864e5).toISOString().split('T')[0];
-}
-function cuotaVal(p){ return Math.round(p.monto*(1+p.interes/100)/p.cuotas); }
 
-// ---- AUTH FLOW ----
-function authTab(tab, btn){
-  document.querySelectorAll('.auth-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  $('login-form').style.display = tab==='login'?'block':'none';
-  $('register-form').style.display = tab==='register'?'block':'none';
-  hideEl('auth-error'); hideEl('auth-info');
+function ganTotal(p) { 
+  return Math.round(p.monto * (p.interes / 100)); 
 }
-window.authTab = authTab;
 
-async function doLogin(){
-  const email=v('l-email'), pass=v('l-pass');
-  if(!email||!pass){ showError('Completa todos los campos'); return; }
-  try{
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch(e){
-    showError(e.code==='auth/invalid-credential'?'Correo o contraseña incorrectos':'Error al ingresar. Intenta de nuevo.');
-  }
-}
-window.doLogin = doLogin;
+// --- LÓGICA DE LOGIN Y BOTONES ---
 
-async function doRegister(){
-  const name=v('r-name'), cedula=v('r-cedula'), email=v('r-email'), pass=v('r-pass');
-  if(!name||!cedula||!email||!pass){ showError('Completa todos los campos'); return; }
-  if(pass.length<6){ showError('La contraseña debe tener al menos 6 caracteres'); return; }
-  try{
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await setDoc(doc(db,'users',cred.user.uid),{
-      nombre:name, cedula, email, role:'pending', createdAt: serverTimestamp()
-    });
-    showEl('auth-info');
-  } catch(e){
-    showError(e.code==='auth/email-already-in-use'?'Este correo ya está registrado':'Error al crear cuenta.');
-  }
-}
-window.doRegister = doRegister;
+window.doLogin = async () => {
+    const email = v('l-email');
+    const pass = v('l-pass');
+    if (!email || !pass) return toast("Ingresa correo y contraseña");
+    
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        toast("Ingresando...");
+    } catch (e) {
+        console.error(e);
+        const errEl = document.getElementById('auth-error');
+        errEl.textContent = "Error: Usuario o clave incorrectos";
+        errEl.style.display = 'block';
+    }
+};
 
-async function doLogout(){
-  if(unsubClientes) unsubClientes();
-  if(unsubPrestamos) unsubPrestamos();
-  if(unsubPagos) unsubPagos();
-  await signOut(auth);
-}
-window.doLogout = doLogout;
+window.doRegister = async () => {
+    const name = v('r-name'), cedula = v('r-cedula'), email = v('r-email'), pass = v('r-pass');
+    if (!name || !cedula || !email || !pass) return toast("Completa todos los campos");
+    
+    try {
+        const res = await createUserWithEmailAndPassword(auth, email, pass);
+        await setDoc(doc(db, "users", res.user.uid), {
+            name, cedula, email, role: 'pending', createdAt: serverTimestamp()
+        });
+        document.getElementById('auth-info').style.display = 'block';
+    } catch (e) {
+        const errEl = document.getElementById('auth-error');
+        errEl.textContent = "Error al registrarse";
+        errEl.style.display = 'block';
+    }
+};
 
-function showError(msg){ const e=$('auth-error'); e.textContent=msg; e.style.display='block'; }
+window.authTab = (type, btn) => {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('auth-error').style.display = 'none';
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(type + '-form').style.display = 'block';
+};
 
-// ---- AUTH STATE ----
-onAuthStateChanged(auth, async user => {
-  hideEl('loader');
-  if(!user){
-    hideEl('app-screen'); hideEl('pending-screen');
-    showEl('auth-screen');
-    return;
-  }
-  currentUser = user;
-  // Check if first user (owner)
-  const usersSnap = await getDocs(collection(db,'users'));
-  const userDoc = await getDoc(doc(db,'users',user.uid));
-  if(!userDoc.exists()){
-    // Legacy: create profile
-    await setDoc(doc(db,'users',user.uid),{nombre:'Usuario',cedula:'',email:user.email,role:'pending',createdAt:serverTimestamp()});
-  }
-  const profile = userDoc.exists() ? userDoc.data() : {role:'pending'};
-  // Auto-assign first user as owner
-  if(usersSnap.size===1 && profile.role==='pending'){
-    await updateDoc(doc(db,'users',user.uid),{role:'owner'});
-    profile.role='owner';
-  }
-  currentRole = profile.role;
-  currentProfile = profile;
-  if(currentRole==='pending'){
-    hideEl('auth-screen'); hideEl('app-screen');
-    showEl('pending-screen','flex');
-    return;
-  }
-  hideEl('auth-screen'); hideEl('pending-screen');
-  showEl('app-screen');
-  initApp();
+onAuthStateChanged(auth, async (user) => {
+    document.getElementById('loader').style.display = 'none';
+    if (user) {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.role === 'pending') {
+                document.getElementById('pending-screen').style.display = 'flex';
+                document.getElementById('auth-screen').style.display = 'none';
+            } else {
+                document.getElementById('app-screen').style.display = 'block';
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('role-badge').textContent = userData.role;
+            }
+        }
+    } else {
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app-screen').style.display = 'none';
+        document.getElementById('pending-screen').style.display = 'none';
+    }
 });
 
-// ---- INIT APP ----
-function initApp(){
-  loadConfig();
-  buildNav();
-  setBadge();
-  if(currentRole==='client'){
-    renderPortalCliente();
-    showScreen('portal-cliente');
-    return;
-  }
-  subscribeData();
-  $('btn-nuevo-cliente').onclick = () => showScreen('nuevo-cliente');
-  $('np-fecha').value = new Date().toISOString().split('T')[0];
-  selectPay('nequi');
-  showScreen('inicio');
-}
-
-function setBadge(){
-  const b=$('role-badge');
-  const labels={owner:'Dueño',employee:'Empleado',client:'Cliente'};
-  const cls={owner:'role-owner',employee:'role-employee',client:'role-client'};
-  b.textContent=labels[currentRole]||currentRole;
-  b.className='role-badge '+(cls[currentRole]||'');
-}
-
-function buildNav(){
-  const isOwner = currentRole==='owner';
-  const isEmployee = currentRole==='employee';
-  const isClient = currentRole==='client';
-  let html='';
-  if(!isClient){
-    html+=navBtn('inicio','Inicio','<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>');
-    html+=navBtn('clientes','Clientes','<circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.87"/>');
-    html+=navBtn('nuevo-prestamo','Préstamo','<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>');
-    html+=navBtn('calendario','Cobros','<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>');
-    if(isOwner) html+=navBtn('ganancias','Ganancias','<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>');
-    html+=navBtn('cobrar','Cobrar','<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>');
-    if(isOwner) html+=navBtn('usuarios','Usuarios','<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>');
-  } else {
-    html+=navBtn('portal-cliente','Mi cuenta','<circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/>');
-  }
-  $('main-nav').innerHTML=html;
-}
-
-function navBtn(id,label,svgPath){
-  return `<button class="nav-btn" onclick="showScreen('${id}')"><svg viewBox="0 0 24 24">${svgPath}</svg>${label}</button>`;
-}
-
-// ---- FIRESTORE SUBSCRIPTIONS ----
-function subscribeData(){
-  unsubClientes = onSnapshot(collection(db,'clientes'), snap => {
-    clientes = snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderInicio(); renderClientes();
-  });
-  unsubPrestamos = onSnapshot(collection(db,'prestamos'), snap => {
-    prestamos = snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderInicio();
-  });
-  unsubPagos = onSnapshot(collection(db,'pagos'), snap => {
-    pagos = snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderInicio();
-  });
-}
-
-// ---- SCREEN ROUTING ----
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const sc=$('screen-'+id);
-  if(sc) sc.classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>{
-    if(b.getAttribute('onclick')===`showScreen('${id}')`) b.classList.add('active');
-  });
-  const map={
-    clientes:renderClientes,inicio:renderInicio,calendario:renderCalendario,
-    'nuevo-prestamo':renderSelectClientes,ganancias:renderGanancias,
-    cobrar:()=>{loadConfig();selectPay(payMethod)},
-    usuarios:renderUsuarios,'portal-cliente':renderPortalCliente
-  };
-  if(map[id]) map[id]();
-  window.scrollTo(0,0);
-}
-window.showScreen = showScreen;
-
-// ---- CLIENTES ----
-async function guardarCliente(){
-  const n=v('nc-nombre'),c=v('nc-cedula'),t=v('nc-tel'),d=v('nc-dir');
-  if(!n||!c){toast('Nombre y cédula son obligatorios');return;}
-  const av=avC[clientes.length%avC.length];
-  await addDoc(collection(db,'clientes'),{nombre:n,cedula:c,tel:t,dir:d,avBg:av.bg,avColor:av.c,creadoPor:currentUser.uid,createdAt:serverTimestamp()});
-  ['nc-nombre','nc-cedula','nc-tel','nc-dir'].forEach(id=>$(id).value='');
-  toast('Cliente guardado ✓');
-  showScreen('clientes');
-}
-window.guardarCliente = guardarCliente;
-
-function renderClientes(){
-  const el=$('client-list');
-  if(!clientes.length){el.innerHTML='<div class="empty">Sin clientes aún.</div>';return;}
-  el.innerHTML=clientes.map(c=>{
-    const ps=prestamos.filter(p=>p.clienteId===c.id&&p.estado!=='pagado');
-    const s=ps.reduce((a,x)=>a+saldo(x),0);
-    const mora=ps.some(x=>esMora(x));
-    return`<div class="client-card" onclick="abrirDetalle('${c.id}')">
-      <div class="avatar" style="width:38px;height:38px;background:${c.avBg};color:${c.avColor};font-size:13px">${initials(c.nombre)}</div>
-      <div class="client-info"><div class="client-name">${c.nombre}</div><div class="client-meta">${c.cedula}${c.tel?' · '+c.tel:''}</div></div>
-      <span class="badge ${mora?'badge-red':s>0?'badge-amber':'badge-green'}">${mora?'Mora':s>0?'Activo':'Al día'}</span>
-    </div>`;
-  }).join('');
-}
-
-function abrirDetalle(id){
-  clienteActivo=id;
-  const c=clientes.find(x=>x.id===id);
-  const ps=prestamos.filter(x=>x.clienteId===id);
-  const av=$('det-avatar');
-  av.style.background=c.avBg;av.style.color=c.avColor;av.textContent=initials(c.nombre);
-  $('det-nombre').textContent=c.nombre;
-  $('det-tel').textContent=[c.tel,c.dir].filter(Boolean).join(' · ')||'Sin datos';
-  $('det-monto').textContent=fmt(ps.reduce((a,x)=>a+x.monto,0));
-  $('det-cuotas').textContent=ps.reduce((a,x)=>a+x.cuotas,0);
-  $('det-saldo').textContent=fmt(ps.reduce((a,x)=>a+saldo(x),0));
-  const allP=pagos.filter(x=>ps.some(p=>p.id===x.prestamoId)).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
-  $('pagos-list').innerHTML=allP.length?allP.map(p=>`<div class="pago-row"><span>${fmtD(p.fecha)}</span><span class="pago-cuota">Cuota ${p.cuota}</span><span class="pago-ok">${fmt(p.monto)}</span></div>`).join(''):'<div style="font-size:13px;color:var(--text2)">Sin pagos aún</div>';
-  $('btn-registrar-pago').onclick=()=>registrarPago(id);
-  $('btn-cobrar-cliente').onclick=()=>{
-    const p=ps.find(x=>x.estado!=='pagado');
-    if(p) $('pay-monto-input').value=cuotaVal(p);
-    showScreen('cobrar');
-  };
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  $('screen-detalle').classList.add('active');
-  window.scrollTo(0,0);
-}
-window.abrirDetalle = abrirDetalle;
-
-async function registrarPago(clienteId){
-  const ps=prestamos.filter(x=>x.clienteId===clienteId&&x.estado!=='pagado');
-  if(!ps.length){toast('No hay préstamos activos');return;}
-  const p=ps[0];
-  const pg=pagos.filter(x=>x.prestamoId===p.id).length;
-  if(pg>=p.cuotas){toast('Préstamo ya pagado');return;}
-  const cv=cuotaVal(p);
-  const hoy=new Date().toISOString().split('T')[0];
-  await addDoc(collection(db,'pagos'),{prestamoId:p.id,clienteId,fecha:hoy,cuota:pg+1,monto:cv,registradoPor:currentUser.uid,createdAt:serverTimestamp()});
-  if(pg+1>=p.cuotas) await updateDoc(doc(db,'prestamos',p.id),{estado:'pagado'});
-  toast('Pago registrado ✓');
-  abrirDetalle(clienteId);
-}
-
-// ---- PRÉSTAMOS ----
-function renderSelectClientes(){
-  $('np-cliente').innerHTML='<option value="">Seleccionar cliente...</option>'+clientes.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
-}
-
-function actualizarResumen(){
-  const m=parseFloat(v('np-monto'))||0,i=parseFloat(v('np-interes'))||0,c=parseInt(v('np-cuotas'))||1;
-  const el=$('resumen-prestamo');
-  if(m>0){el.style.display='block';el.innerHTML=`Total: <strong>${fmt(Math.round(m*(1+i/100)))}</strong> · Cuota: <strong>${fmt(Math.round(m*(1+i/100)/c))}</strong> · Ganancia: <strong>${fmt(Math.round(m*i/100))}</strong>`;}
-  else el.style.display='none';
-}
-window.actualizarResumen=actualizarResumen;
-
-async function guardarPrestamo(){
-  const cid=v('np-cliente'),m=parseFloat(v('np-monto')),i=parseFloat(v('np-interes'))||0;
-  const c=parseInt(v('np-cuotas'))||12,freq=$('np-freq').value,fecha=v('np-fecha');
-  if(!cid||!m||!fecha){toast('Completa todos los campos obligatorios');return;}
-  const cliente=clientes.find(x=>x.id===cid);
-  await addDoc(collection(db,'prestamos'),{clienteId:cid,clienteNombre:cliente?cliente.nombre:'',monto:m,interes:i,cuotas:c,freq,fecha,estado:'activo',creadoPor:currentUser.uid,createdAt:serverTimestamp()});
-  ['np-monto','np-cuotas'].forEach(id=>$(id).value='');
-  $('np-cliente').value='';$('resumen-prestamo').style.display='none';
-  toast('Préstamo creado ✓');showScreen('inicio');
-}
-window.guardarPrestamo=guardarPrestamo;
-
-// ---- INICIO ----
-function renderInicio(){
-  const act=prestamos.filter(p=>p.estado!=='pagado');
-  const hoy=new Date().toISOString().split('T')[0];
-  $('m-cartera').textContent=fmt(act.reduce((a,p)=>a+saldo(p),0));
-  $('m-hoy').textContent=fmt(act.filter(p=>proxCuota(p)===hoy).reduce((a,p)=>a+cuotaVal(p),0));
-  $('m-clientes').textContent=clientes.length;
-  $('m-mora').textContent=act.filter(p=>esMora(p)).length;
-  const prox=act.map(p=>{const c=clientes.find(x=>x.id===p.clienteId);const f=proxCuota(p);if(!f)return null;return{nombre:c?c.nombre:'?',fecha:f,val:cuotaVal(p),mora:esMora(p)};}).filter(Boolean).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,6);
-  $('proximos-list').innerHTML=prox.length?prox.map(p=>`<div class="cobro-item"><div class="cobro-dot ${p.mora?'dot-red':'dot-green'}"></div><div class="cobro-info"><div class="cobro-name">${p.nombre}</div><div class="cobro-date">${fmtD(p.fecha)}</div></div><div class="cobro-monto">${fmt(p.val)}</div></div>`).join(''):'<div class="empty">Sin cobros próximos</div>';
-}
-
-// ---- CALENDARIO ----
-function renderCalendario(){
-  const M=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  $('cal-titulo').textContent=M[calMes]+' '+calAnio;
-  const hoy=new Date(),primero=new Date(calAnio,calMes,1),ult=new Date(calAnio,calMes+1,0).getDate();
-  const act=prestamos.filter(p=>p.estado!=='pagado');const fc={};
-  act.forEach(p=>{const f=proxCuota(p);if(!f)return;const[y,m,d]=f.split('-');if(parseInt(m)-1===calMes&&parseInt(y)===calAnio){if(!fc[d])fc[d]=[];const c=clientes.find(x=>x.id===p.clienteId);fc[d].push({nombre:c?c.nombre:'?',mora:esMora(p),val:cuotaVal(p)});}});
-  let h=['Do','Lu','Ma','Mi','Ju','Vi','Sa'].map(d=>`<div class="cal-dname">${d}</div>`).join('');
-  for(let i=0;i<primero.getDay();i++)h+='<div></div>';
-  for(let d=1;d<=ult;d++){const ds=String(d).padStart(2,'0');const isH=hoy.getDate()===d&&hoy.getMonth()===calMes&&hoy.getFullYear()===calAnio;const co=fc[ds];const mo=co&&co.some(x=>x.mora);h+=`<div class="cal-day ${co?(mo?'mora':'has-cobro'):''} ${isH?'today':''}">${d}${co?'<br><span style="font-size:9px;opacity:.7">'+co.length+'c</span>':''}</div>`;}
-  $('cal-grid').innerHTML=h;
-  const cm=[];Object.entries(fc).forEach(([d,cs])=>cs.forEach(c=>cm.push({...c,d})));cm.sort((a,b)=>parseInt(a.d)-parseInt(b.d));
-  $('cobros-mes').innerHTML=cm.length?cm.map(c=>`<div class="cobro-item"><div class="cobro-dot ${c.mora?'dot-red':'dot-green'}"></div><div class="cobro-info"><div class="cobro-name">${c.nombre}</div><div class="cobro-date">Día ${parseInt(c.d)} · ${M[calMes]}</div></div><div class="cobro-monto">${fmt(c.val)}</div></div>`).join(''):'<div class="empty">Sin cobros este mes</div>';
-}
-function cambiarMes(dir){calMes+=dir;if(calMes>11){calMes=0;calAnio++;}if(calMes<0){calMes=11;calAnio--;}renderCalendario();}
-window.cambiarMes=cambiarMes;
-
-// ---- GANANCIAS ----
-function ganTab(id,btn){
-  document.querySelectorAll('.gan-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.gan-section').forEach(s=>s.classList.remove('active'));
-  btn.classList.add('active');$('gs-'+id).classList.add('active');
-  if(id==='cuotas')renderCuotasSelect();
-}
-window.ganTab=ganTab;
-
-function renderGanancias(){
-  const todos=prestamos;
-  const capTotal=todos.reduce((a,p)=>a+p.monto,0);
-  const gTot=todos.reduce((a,p)=>a+ganTotal(p),0);
-  const gCob=todos.reduce((a,p)=>a+ganRecibida(p),0);
-  $('g-capital').textContent=fmt(capTotal);$('g-cobrado').textContent=fmt(gCob);
-  $('g-pendiente').textContent=fmt(gTot-gCob);$('g-total').textContent=fmt(gTot);
-  const maxG=Math.max(...todos.map(p=>ganTotal(p)),1);
-  $('bar-prestamos').innerHTML=todos.length?todos.map(p=>{const c=clientes.find(x=>x.id===p.clienteId);return`<div class="bar-row"><div class="bar-label">${c?c.nombre.split(' ')[0]:'?'}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(ganTotal(p)/maxG*100)}%"></div></div><div class="bar-val">${fmt(ganTotal(p))}</div></div>`;}).join(''):'<div class="empty">Sin préstamos</div>';
-  const hoy=new Date();const mN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  let proy=[];
-  for(let i=0;i<6;i++){
-    const d=new Date(hoy.getFullYear(),hoy.getMonth()+i,1);
-    let cobro=0;
-    prestamos.filter(p=>p.estado!=='pagado').forEach(p=>{const pg=pagos.filter(x=>x.prestamoId===p.id).length;const cM=p.freq==='mensual'?1:p.freq==='quincenal'?2:4;const rest=p.cuotas-pg;cobro+=Math.min(cM,rest)*(ganTotal(p)/p.cuotas);});
-    proy.push({l:mN[d.getMonth()],v:Math.round(cobro),f:i>0});
-  }
-  const maxP=Math.max(...proy.map(x=>x.v),1);
-  $('g-mes0').textContent=fmt(proy[0]?proy[0].v:0);
-  $('g-mes3').textContent=fmt(proy.slice(0,3).reduce((a,x)=>a+x.v,0));
-  $('bar-proyeccion').innerHTML=proy.map(x=>`<div class="bar-row"><div class="bar-label">${x.l}</div><div class="bar-track"><div class="bar-fill ${x.f?'proj':''}" style="width:${Math.round(x.v/maxP*100)}%"></div></div><div class="bar-val">${fmt(x.v)}</div></div>`).join('');
-  renderCuotasSelect();
-}
-
-function simular(){
-  const m=parseFloat(v('sim-monto'))||0,i=parseFloat(v('sim-interes'))||0,c=parseInt(v('sim-cuotas'))||1;
-  const freq=$('sim-freq').value;const el=$('sim-resultado');
-  if(!m){el.style.display='none';return;}
-  const per=freq==='mensual'?'meses':freq==='quincenal'?'quincenas':'semanas';
-  el.style.display='block';
-  el.innerHTML=`<strong>Total a cobrar:</strong> ${fmt(Math.round(m*(1+i/100)))}<br><strong>Ganancia neta:</strong> ${fmt(Math.round(m*i/100))}<br><strong>Valor cuota:</strong> ${fmt(Math.round(m*(1+i/100)/c))} × ${c} ${per}<br><strong>Rentabilidad:</strong> ${i.toFixed(1)}%`;
-}
-window.simular=simular;
-
-function renderCuotasSelect(){
-  $('cuotas-select').innerHTML='<option value="">Todos los activos</option>'+prestamos.filter(p=>p.estado!=='pagado').map(p=>{const c=clientes.find(x=>x.id===p.clienteId);return`<option value="${p.id}">${c?c.nombre:'?'} – ${fmt(p.monto)}</option>`;}).join('');
-  renderCuotas();
-}
-function renderCuotas(){
-  const sel=v('cuotas-select');
-  const ps=sel?prestamos.filter(p=>p.id===sel):prestamos.filter(p=>p.estado!=='pagado');
-  let html='';
-  ps.forEach(p=>{
-    const c=clientes.find(x=>x.id===p.clienteId);
-    const pgs=pagos.filter(x=>x.prestamoId===p.id);
-    const cv=cuotaVal(p);const dias=p.freq==='mensual'?30:p.freq==='quincenal'?15:7;
-    const hoy=new Date();hoy.setHours(0,0,0,0);
-    html+=`<div style="font-size:12px;font-weight:600;color:var(--text2);padding:7px 0 4px">${c?c.nombre:'?'} · ${fmt(p.monto)} · ${p.cuotas} cuotas ${p.freq}s</div>`;
-    html+='<div class="proy-table"><div class="proy-head"><span>Vencimiento</span><span style="text-align:center">N°</span><span style="text-align:right">Monto</span><span style="text-align:right">Estado</span></div>';
-    for(let i=1;i<=p.cuotas;i++){
-      const fC=new Date(new Date(p.fecha).getTime()+(i-1)*dias*864e5);
-      const fS=fC.toISOString().split('T')[0];
-      const pg=pgs.find(x=>x.cuota===i);const ven=!pg&&fC<hoy;
-      const cls=pg?'pagado':ven?'mora-row':'';
-      const badge=pg?'c-paid':ven?'c-mora':fC.getTime()-hoy.getTime()<3*864e5?'c-pend':'c-fut';
-      const lbl=pg?'Pagado':ven?'Mora':fC.getTime()-hoy.getTime()<3*864e5?'Próxima':'Pendiente';
-      html+=`<div class="proy-row ${cls}"><span>${fmtD(fS)}</span><span style="text-align:center;font-weight:500">${i}</span><span style="text-align:right">${fmt(cv)}</span><span style="text-align:right"><span class="cuota-badge ${badge}">${lbl}</span></span></div>`;
-    }
-    html+='</div>';
-  });
-  $('cuotas-table').innerHTML=html||'<div class="empty">Sin préstamos activos</div>';
-}
-window.renderCuotas=renderCuotas;
-
-// ---- COBRAR ----
-function loadConfig(){try{const d=localStorage.getItem('prestapp_cfg');if(d){const p=JSON.parse(d);cfg=Object.assign(cfg,p);$('cfg-nequi').value=cfg.nequi;$('cfg-banco').value=cfg.banco;$('cfg-nombre').value=cfg.nombre;$('cfg-efectivo').value=cfg.efectivo;}}catch(e){}}
-function saveConfig(){cfg.nequi=v('cfg-nequi');cfg.banco=v('cfg-banco');cfg.nombre=v('cfg-nombre');cfg.efectivo=v('cfg-efectivo');try{localStorage.setItem('prestapp_cfg',JSON.stringify(cfg));}catch(e){}}
-window.saveConfig=saveConfig;
-
-function selectPay(m){
-  payMethod=m;
-  ['nequi','banco','efectivo'].forEach(x=>{const b=$('pm-'+x);b.className='pay-method-btn';if(x===m)b.classList.add('sel-'+x);});
-  renderPayDetail();
-}
-window.selectPay=selectPay;
-
-function makeQR(data){
-  const seed=data.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
-  let cells='';
-  for(let r=2;r<17;r++)for(let cc=2;cc<17;cc++){
-    if((r<7&&cc<7)||(r<7&&cc>11)||(r>11&&cc<7))continue;
-    if(((seed*1103515245+r*12345+cc*67891)&0x7fffffff)%100>48)cells+=`<rect x="${cc*8}" y="${r*8}" width="7" height="7" fill="#1A1A18"/>`;
-  }
-  return`<svg width="150" height="150" viewBox="0 0 152 152" xmlns="http://www.w3.org/2000/svg"><rect width="152" height="152" fill="white"/><rect x="8" y="8" width="48" height="48" rx="4" fill="none" stroke="#1A1A18" stroke-width="4"/><rect x="18" y="18" width="28" height="28" rx="2" fill="#1A1A18"/><rect x="96" y="8" width="48" height="48" rx="4" fill="none" stroke="#1A1A18" stroke-width="4"/><rect x="106" y="18" width="28" height="28" rx="2" fill="#1A1A18"/><rect x="8" y="96" width="48" height="48" rx="4" fill="none" stroke="#1A1A18" stroke-width="4"/><rect x="18" y="106" width="28" height="28" rx="2" fill="#1A1A18"/>${cells}</svg>`;
-}
-
-function renderPayDetail(){
-  const area=$('pay-detail-area');
-  const monto=parseFloat($('pay-monto-input').value)||0;
-  const m=payMethod;
-  if(m==='nequi'){
-    const num=cfg.nequi||'(agrega tu número arriba)';const nom=cfg.nombre||'Tu nombre';
-    area.innerHTML=`<div class="qr-box"><div class="qr-title">Cobrar con Nequi</div><div class="qr-sub">Muéstrale este QR a tu cliente</div><div class="qr-svg-wrap">${makeQR('NEQUI:'+num)}</div><div class="qr-info-row"><span class="qr-info-lbl">Número Nequi</span><span class="qr-info-val" style="color:var(--nequi);font-size:15px">${num}</span></div><div class="qr-info-row"><span class="qr-info-lbl">A nombre de</span><span class="qr-info-val">${nom}</span></div>${monto?`<div class="qr-info-row"><span class="qr-info-lbl">Monto</span><span class="qr-info-val" style="color:var(--teal);font-size:15px">${fmt(monto)}</span></div>`:''}</div><div class="info-note" style="background:var(--nequi-bg);color:var(--nequi)">Nequi → Cobrar → el cliente escanea el QR o escribe el número.</div>`;
-  } else if(m==='banco'){
-    const num=cfg.banco||'(agrega tu cuenta arriba)';const nom=cfg.nombre||'Tu nombre';
-    area.innerHTML=`<div class="qr-box"><div class="qr-title">Cobrar con Bancolombia</div><div class="qr-sub">El cliente transfiere desde su app</div><div class="qr-svg-wrap">${makeQR('BANCOLOMBIA:'+num)}</div><div class="qr-info-row"><span class="qr-info-lbl">Número / Cuenta</span><span class="qr-info-val" style="color:var(--banco);font-size:15px">${num}</span></div><div class="qr-info-row"><span class="qr-info-lbl">Banco</span><span class="qr-info-val">Bancolombia</span></div><div class="qr-info-row"><span class="qr-info-lbl">A nombre de</span><span class="qr-info-val">${nom}</span></div>${monto?`<div class="qr-info-row"><span class="qr-info-lbl">Monto</span><span class="qr-info-val" style="color:var(--teal);font-size:15px">${fmt(monto)}</span></div>`:''}</div><div class="info-note" style="background:var(--banco-bg);color:var(--banco)">App Bancolombia → Transferir → ingresa el número y monto.</div>`;
-  } else {
-    const inst=cfg.efectivo||'Entrégame el dinero en mano.';
-    area.innerHTML=`<div class="efectivo-box"><div style="font-size:38px;margin-bottom:8px">💵</div><div class="qr-title">Pago en efectivo</div>${monto?`<div class="efectivo-amount">${fmt(monto)}</div><div style="font-size:12px;color:var(--text2);margin-bottom:10px">Monto exacto</div>`:''}<div style="font-size:13px;color:var(--text2);margin-top:6px;line-height:1.6">${inst}</div></div><div class="info-note" style="background:var(--teal-bg);color:var(--teal-text)">Recuerda registrar el pago en el perfil del cliente después de recibirlo.</div>`;
-  }
-}
-window.renderPayDetail=renderPayDetail;
-
-// ---- PORTAL CLIENTE ----
-async function renderPortalCliente(){
-  const el=$('portal-content');
-  el.innerHTML='<div class="empty">Cargando tu información...</div>';
-  const cedula=currentProfile.cedula;
-  if(!cedula){el.innerHTML='<div class="empty">No tienes cédula registrada. Contacta al administrador.</div>';return;}
-  const q=query(collection(db,'clientes'),where('cedula','==',cedula));
-  const snap=await getDocs(q);
-  if(snap.empty){el.innerHTML=`<div class="empty">No encontramos tu cuenta con cédula ${cedula}.<br>Contacta al administrador para que te registre.</div>`;return;}
-  const cliente=snap.docs[0].data();const clienteId=snap.docs[0].id;
-  const psSnap=await getDocs(query(collection(db,'prestamos'),where('clienteId','==',clienteId)));
-  const ps=psSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const pgSnap=await getDocs(query(collection(db,'pagos'),where('clienteId','==',clienteId)));
-  const pgs=pgSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const av=avC[0];
-  let html=`<div class="detail-header"><div class="avatar" style="width:44px;height:44px;font-size:14px;background:${av.bg};color:${av.c}">${initials(cliente.nombre)}</div><div><div class="detail-name">${cliente.nombre}</div><div class="detail-meta">Cédula: ${cliente.cedula}</div></div></div>`;
-  html+=`<div class="detail-stats"><div class="det-stat"><div class="det-stat-lbl">Préstamos</div><div class="det-stat-val">${ps.length}</div></div><div class="det-stat"><div class="det-stat-lbl">Pagos realizados</div><div class="det-stat-val">${pgs.length}</div></div><div class="det-stat"><div class="det-stat-lbl">Saldo total</div><div class="det-stat-val danger">${fmt(ps.reduce((a,p)=>{const pg2=pgs.filter(x=>x.prestamoId===p.id).length;return a+Math.max(0,Math.round((p.cuotas-pg2)*p.monto*(1+p.interes/100)/p.cuotas));},0))}</div></div></div>`;
-  ps.forEach(p=>{
-    const pgsP=pgs.filter(x=>x.prestamoId===p.id);
-    const pg2=pgsP.length;const total=Math.round(p.monto*(1+p.interes/100));const cv=Math.round(total/p.cuotas);
-    const saldoP=Math.max(0,Math.round((p.cuotas-pg2)*cv));
-    const dias=p.freq==='mensual'?30:p.freq==='quincenal'?15:7;
-    const proxF=pg2<p.cuotas?new Date(new Date(p.fecha).getTime()+pg2*dias*864e5).toISOString().split('T')[0]:null;
-    html+=`<div class="portal-card"><div class="portal-card-title">Préstamo · ${fmt(p.monto)}</div>
-      <div class="pago-row"><span style="color:var(--text2)">Total a pagar</span><span style="font-weight:500">${fmt(total)}</span></div>
-      <div class="pago-row"><span style="color:var(--text2)">Valor cuota</span><span style="font-weight:500">${fmt(cv)} ${p.freq}</span></div>
-      <div class="pago-row"><span style="color:var(--text2)">Cuotas pagadas</span><span style="font-weight:500">${pg2} de ${p.cuotas}</span></div>
-      <div class="pago-row"><span style="color:var(--text2)">Saldo pendiente</span><span style="font-weight:600;color:var(--red)">${fmt(saldoP)}</span></div>
-      ${proxF?`<div class="pago-row"><span style="color:var(--text2)">Próxima cuota</span><span style="font-weight:500;color:var(--teal)">${fmtD(proxF)}</span></div>`:''}
-      <div class="pago-row" style="border:none;padding-bottom:0"><span style="color:var(--text2)">Estado</span><span class="badge ${p.estado==='pagado'?'badge-green':'badge-amber'}">${p.estado==='pagado'?'Pagado':'Activo'}</span></div>
-    </div>`;
-    if(pgsP.length){
-      html+=`<div class="pagos-box" style="margin-bottom:10px"><div class="pagos-title">Historial de pagos</div>${pgsP.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).map(g=>`<div class="pago-row"><span>${fmtD(g.fecha)}</span><span class="pago-cuota">Cuota ${g.cuota}</span><span class="pago-ok">${fmt(g.monto)}</span></div>`).join('')}</div>`;
-    }
-  });
-  if(!ps.length) html+='<div class="empty">No tienes préstamos registrados aún.</div>';
-  el.innerHTML=html;
-}
-
-// ---- ADMIN USUARIOS ----
-async function renderUsuarios(){
-  const snap=await getDocs(collection(db,'users'));
-  const users=snap.docs.map(d=>({id:d.id,...d.data()}));
-  $('users-list').innerHTML=users.map(u=>`
-    <div class="user-row">
-      <div class="avatar" style="width:36px;height:36px;background:#E1F5EE;color:#085041;font-size:12px;flex-shrink:0">${initials(u.nombre||u.email||'?')}</div>
-      <div class="user-info">
-        <div class="user-name">${u.nombre||'Sin nombre'}</div>
-        <div class="user-email">${u.email} · ${u.cedula||'sin cédula'}</div>
-      </div>
-      <select class="role-select" onchange="cambiarRol('${u.id}',this.value)" ${u.id===currentUser.uid?'disabled':''}>
-        <option value="pending" ${u.role==='pending'?'selected':''}>Pendiente</option>
-        <option value="client" ${u.role==='client'?'selected':''}>Cliente</option>
-        <option value="employee" ${u.role==='employee'?'selected':''}>Empleado</option>
-        <option value="owner" ${u.role==='owner'?'selected':''}>Dueño</option>
-      </select>
-    </div>`).join('');
-}
-
-async function cambiarRol(uid,role){
-  await updateDoc(doc(db,'users',uid),{role});
-  toast('Rol actualizado ✓');
-}
-window.cambiarRol=cambiarRol;
+window.doLogout = () => signOut(auth);
 
 </script>
 </body>
-</html>
-
+  
