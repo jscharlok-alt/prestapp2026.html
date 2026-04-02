@@ -1,113 +1,94 @@
 <script type="module">
-// ... (Mantén las importaciones y la config de Firebase igual que arriba)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, addDoc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// COPIA AQUÍ TUS PROPIAS CREDENCIALES DE FIREBASE (las que empiezan con apiKey)
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_DOMINIO",
+  projectId: "TU_PROJECT_ID",
+  storageBucket: "TU_BUCKET",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// --- LÓGICA DE ESTADO DE USUARIO ---
 onAuthStateChanged(auth, async (user) => {
+  const authScreen = document.getElementById('auth-screen');
+  const appScreen = document.getElementById('app-screen');
+
   if (user) {
-    // Buscamos tu "ficha" en la colección 'users'
     const userDoc = await getDoc(doc(db, "users", user.uid));
-    
     if (userDoc.exists()) {
       const userData = userDoc.data();
-      // Convertimos el rol a minúsculas para que no falle por una mayúscula
-      const rolActual = userData.role ? userData.role.toLowerCase() : 'pending';
+      const rolLimpio = (userData.role || 'pending').toLowerCase();
 
-      document.getElementById('auth-screen').classList.add('hidden');
-      document.getElementById('app-screen').classList.remove('hidden');
+      authScreen.classList.add('hidden');
+      appScreen.classList.remove('hidden');
       document.getElementById('user-name').innerText = "Hola, " + (userData.nombre || "Usuario");
 
-      // SI ERES DUEÑO (owner)
-      if (rolActual === 'owner') {
-        document.getElementById('tab-clientes').classList.remove('hidden');
-        document.getElementById('tab-usuarios').classList.remove('hidden');
-        document.getElementById('btn-nuevo-p').classList.remove('hidden');
-        document.getElementById('card-stats').classList.remove('hidden');
-        loadAdminData(); // Carga todos los préstamos
-        loadUsersForApproval(); // Carga usuarios pendientes
-      } 
-      // SI ERES CLIENTE
-      else if (rolActual === 'client') {
+      if (rolLimpio === 'owner') {
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+        loadAdminData();
+        loadUsersForApproval();
+      } else {
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
         loadClientData(userData.nombre);
-      } 
-      // SI ESTÁS PENDIENTE
-      else {
-        document.getElementById('user-name').innerText = "Esperando aprobación...";
-        document.getElementById('lista-prestamos').innerHTML = "<p style='text-align:center; padding:20px'>Tu cuenta está en revisión. El administrador te activará pronto.</p>";
       }
     }
   } else {
-    document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('app-screen').classList.add('hidden');
+    authScreen.classList.remove('hidden');
+    appScreen.classList.add('hidden');
   }
 });
 
-// Función para cargar datos de administrador
-function loadAdminData() {
+// --- FUNCIONES DE CARGA (Para que no falle el sistema) ---
+async function loadAdminData() {
   onSnapshot(collection(db, "prestamos"), (snap) => {
     let total = 0;
     let html = '';
     snap.forEach(doc => {
       const p = doc.data();
-      const final = p.monto * (1 + (p.interes/100));
-      total += final;
-      html += `
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center">
-          <div>
-            <b style="text-transform:capitalize">${p.cliente}</b><br>
-            <span style="font-size:12px; color:gray">${p.cuotas} cuotas | ${p.interes}% int.</span>
-          </div>
-          <b style="color:var(--teal)">$${final.toLocaleString()}</b>
-        </div>`;
+      total += Number(p.monto || 0);
+      html += `<div class="card"><b>${p.cliente}</b>: $${p.monto}</div>`;
     });
-    document.getElementById('lista-prestamos').innerHTML = html || '<p>No hay préstamos registrados.</p>';
-    document.getElementById('stat-total').innerText = "$ " + total.toLocaleString();
-  });
-}
-  // --- FUNCIÓN PARA LA VISTA DEL CLIENTE ---
-function loadClientData(nombreCliente) {
-  const listaPrestamos = document.getElementById('lista-prestamos');
-  // Buscamos solo los préstamos que pertenecen a este cliente
-  const q = query(collection(db, "prestamos"), where("cliente", "==", nombreCliente));
-  
-  onSnapshot(q, (snap) => {
-    let html = '';
-    snap.forEach(doc => {
-      const p = doc.data();
-      const final = p.monto * (1 + (p.interes/100));
-      html += `
-        <div class="card">
-          <div style="display:flex; justify-content:space-between">
-            <b>Préstamo Activo</b>
-            <span style="color:var(--teal)">$${final.toLocaleString()}</span>
-          </div>
-          <p style="font-size:12px; color:gray">${p.cuotas} cuotas pendientes</p>
-        </div>`;
-    });
-    listaPrestamos.innerHTML = html || '<p style="text-align:center">No tienes préstamos activos aún.</p>';
+    document.getElementById('lista-prestamos').innerHTML = html || '<p>Sin préstamos.</p>';
+    if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = "$" + total;
   });
 }
 
-// --- FUNCIÓN PARA VER USUARIOS (La que usas en tu imagen) ---
-function loadUsersForApproval() {
+async function loadClientData(nombre) {
+  const q = query(collection(db, "prestamos"), where("cliente", "==", nombre));
+  onSnapshot(q, (snap) => {
+    let html = '';
+    snap.forEach(doc => {
+      html += `<div class="card">Tu préstamo: $${doc.data().monto}</div>`;
+    });
+    document.getElementById('lista-prestamos').innerHTML = html || '<p>No tienes préstamos activos.</p>';
+  });
+}
+
+async function loadUsersForApproval() {
   onSnapshot(collection(db, "users"), (snap) => {
     let html = '';
     snap.forEach(doc => {
       const u = doc.data();
-      if(u.role !== 'owner') { // No te muestras a ti mismo para no borrarte por error
-        html += `
-          <div class="card" style="display:flex; justify-content:space-between; align-items:center">
-            <div>
-              <b>${u.nombre || 'Sin nombre'}</b><br>
-              <span style="font-size:12px">${u.email}</span>
-            </div>
-            <select onchange="updateUserRole('${doc.id}', this.value)" style="padding:5px; border-radius:8px">
-              <option value="pending" ${u.role === 'pending' ? 'selected' : ''}>Pendiente</option>
-              <option value="client" ${u.role === 'client' ? 'selected' : ''}>Cliente</option>
-            </select>
-          </div>`;
+      if(u.role !== 'owner') {
+        html += `<div class="card">${u.email} - ${u.role}</div>`;
       }
     });
-    const listaUsuarios = document.getElementById('lista-usuarios'); // Asegúrate de tener este ID en tu HTML
-    if(listaUsuarios) listaUsuarios.innerHTML = html;
+    const lista = document.getElementById('lista-usuarios');
+    if(lista) lista.innerHTML = html;
   });
 }
+
+// Hacer funciones globales para que los botones funcionen
+window.updateUserRole = async (id, nuevoRol) => {
+  await updateDoc(doc(db, "users", id), { role: nuevoRol });
+};
 </script>
