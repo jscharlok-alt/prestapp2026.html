@@ -3,51 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Préstamos 2026 - Isidro</title>
+    <title>Préstamos 2026</title>
     <style>
-        body { font-family: sans-serif; margin: 0; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h1 { color: #1c1e21; text-align: center; font-size: 24px; margin-bottom: 10px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 14px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        body { font-family: sans-serif; background: #f4f4f9; margin: 0; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        .btn-login { background: #2c3e50; color: white; }
+        .btn-reg { background: #ecf0f1; color: #2c3e50; border: 1px solid #bdc3c7; }
         .hidden { display: none !important; }
-        .header { background: #2c3e50; color: white; padding: 15px; width: 100%; position: fixed; top: 0; left: 0; text-align: center; }
-        .content { margin-top: 80px; width: 100%; max-width: 500px; }
-        .loan-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #28a745; }
+        .app-header { background: #2c3e50; color: white; padding: 15px; position: fixed; top: 0; width: 100%; text-align: center; left: 0; }
+        .loan-item { background: #fff; border-left: 5px solid #27ae60; padding: 10px; margin: 10px 0; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
     <div id="auth-screen" class="card">
-        <h1>🏦 Préstamos 2026</h1>
-        <p style="text-align:center; color: #65676b;">Control de Créditos</p>
-        <input type="email" id="email" placeholder="Correo electrónico">
-        <input type="password" id="password" placeholder="Contraseña">
-        <button id="btn-login">ENTRAR</button>
+        <h2>🏦 Préstamos 2026</h2>
+        <div id="login-form">
+            <input type="email" id="email" placeholder="Correo electrónico">
+            <input type="password" id="password" placeholder="Contraseña">
+            <button id="btn-login" class="btn-login">ENTRAR</button>
+            <button id="show-reg" class="btn-reg">¿No tienes cuenta? Regístrate</button>
+        </div>
+        <div id="reg-form" class="hidden">
+            <input type="text" id="reg-name" placeholder="Nombre completo">
+            <input type="email" id="reg-email" placeholder="Correo electrónico">
+            <input type="password" id="reg-pass" placeholder="Crea una contraseña">
+            <button id="btn-register" class="btn-login">CREAR CUENTA</button>
+            <button id="show-login" class="btn-reg">Volver al inicio</button>
+        </div>
     </div>
 
-    <div id="app-screen" class="hidden" style="width: 100%;">
-        <div class="header">
-            <span id="user-name">Hola, Usuario</span> | 
-            <a href="#" id="btn-logout" style="color: #ff4d4d; text-decoration: none; font-weight: bold;">Salir</a>
+    <div id="app-screen" class="hidden" style="width: 100%; max-width: 500px; margin-top: 60px;">
+        <div class="app-header">
+            <span id="user-display">Cargando...</span> | 
+            <button onclick="location.reload()" style="width:auto; padding:5px; background:none; color:red; border:none;">Salir</button>
         </div>
-        <div class="content">
-            <div id="admin-panel" class="hidden" style="background: #fff3cd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffeeba;">
-                <h3>🛠️ PANEL DE ISIDRO</h3>
-                <div id="lista-usuarios">Cargando usuarios...</div>
-            </div>
-            
-            <div class="card">
-                <h3>💰 Mis Préstamos</h3>
-                <div id="lista-prestamos">Buscando datos en la nube...</div>
-            </div>
+        
+        <div id="admin-panel" class="hidden" style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:15px; border:1px solid #ffeeba;">
+            <h3>🛠️ PANEL DE ADMINISTRADOR</h3>
+            <div id="lista-usuarios"></div>
+        </div>
+
+        <div class="card">
+            <h3>💰 Mis Préstamos</h3>
+            <div id="lista-prestamos">Buscando información...</div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw",
@@ -62,64 +71,65 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // CONFIGURACIÓN DE TU ACCESO (ISIDRO)
-        const ADMIN_EMAIL = "isidrogonzalez85@gmail.com"; // <-- ASEGÚRATE QUE SEA ESTE TU CORREO
+        // --- NAVEGACIÓN ENTRE LOGIN Y REGISTRO ---
+        document.getElementById('show-reg').onclick = () => { document.getElementById('login-form').classList.add('hidden'); document.getElementById('reg-form').classList.remove('hidden'); };
+        document.getElementById('show-login').onclick = () => { document.getElementById('reg-form').classList.add('hidden'); document.getElementById('login-form').classList.remove('hidden'); };
 
+        // --- ACCIONES ---
         document.getElementById('btn-login').onclick = async () => {
-            const e = document.getElementById('email').value;
-            const p = document.getElementById('password').value;
-            try {
-                await signInWithEmailAndPassword(auth, e, p);
-            } catch (err) {
-                alert("Error al entrar: " + err.message);
-            }
+            try { await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value); }
+            catch (e) { alert("Error: Correo o contraseña incorrectos."); }
         };
 
-        document.getElementById('btn-logout').onclick = () => signOut(auth);
+        document.getElementById('btn-register').onclick = async () => {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+            try {
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "users", res.user.uid), { nombre: name, email: email, role: 'pending' });
+                alert("Cuenta creada. Espera a que el administrador te dé acceso.");
+                location.reload();
+            } catch (e) { alert("Error al registrar: " + e.message); }
+        };
 
+        // --- MONITOR DE ESTADO ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    document.getElementById('auth-screen').classList.add('hidden');
+                    document.getElementById('app-screen').classList.remove('hidden');
+                    document.getElementById('user-display').innerText = "Hola, " + data.nombre;
 
-                // LÓGICA DE ACCESO AUTOMÁTICO PARA TI
-                if (user.email === ADMIN_EMAIL) {
-                    document.getElementById('user-name').innerText = "Hola, Isidro (Dueño)";
-                    document.getElementById('admin-panel').classList.remove('hidden');
-                    loadData(true, user.email);
-                } else {
-                    document.getElementById('user-name').innerText = "Hola, Cliente";
-                    loadData(false, user.email);
+                    if (data.role === 'owner') {
+                        document.getElementById('admin-panel').classList.remove('hidden');
+                        loadAdminData();
+                    } else {
+                        loadClientData(data.nombre);
+                    }
                 }
-            } else {
-                document.getElementById('auth-screen').classList.remove('hidden');
-                document.getElementById('app-screen').classList.add('hidden');
             }
         });
 
-        function loadData(isAdmin, email) {
-            // Cargar Préstamos
-            const q = isAdmin ? collection(db, "prestamos") : query(collection(db, "prestamos"), where("cliente_email", "==", email));
-            onSnapshot(q, (snap) => {
-                let h = '';
-                snap.forEach(d => {
-                    const p = d.data();
-                    h += `<div class="loan-card"><b>${p.cliente || 'Préstamo'}</b><br>Monto: $${p.monto}</div>`;
-                });
-                document.getElementById('lista-prestamos').innerHTML = h || 'No hay datos registrados.';
+        function loadAdminData() {
+            onSnapshot(collection(db, "prestamos"), (snap) => {
+                let h = ''; snap.forEach(d => { h += `<div class="loan-item"><b>${d.data().cliente}</b>: $${d.data().monto}</div>`; });
+                document.getElementById('lista-prestamos').innerHTML = h || 'Sin préstamos.';
             });
+            onSnapshot(collection(db, "users"), (snap) => {
+                let h = ''; snap.forEach(d => { h += `<div>${d.data().email} (${d.data().role})</div>`; });
+                document.getElementById('lista-usuarios').innerHTML = h;
+            });
+        }
 
-            // Cargar Usuarios si es Admin
-            if (isAdmin) {
-                onSnapshot(collection(db, "users"), (snap) => {
-                    let h = '';
-                    snap.forEach(d => {
-                        const u = d.data();
-                        h += `<div style="font-size:14px; border-bottom:1px solid #ccc; padding:5px;">👤 ${u.email} (${u.role})</div>`;
-                    });
-                    document.getElementById('lista-usuarios').innerHTML = h;
-                });
-            }
+        function loadClientData(nombre) {
+            const q = query(collection(db, "prestamos"), where("cliente", "==", nombre));
+            onSnapshot(q, (snap) => {
+                let h = ''; snap.forEach(d => { h += `<div class="loan-item">Préstamo: $${d.data().monto}</div>`; });
+                document.getElementById('lista-prestamos').innerHTML = h || 'No tienes préstamos activos.';
+            });
         }
     </script>
 </body>
