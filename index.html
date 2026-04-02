@@ -1,147 +1,38 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PrestApp - Sistema de Gestión</title>
-<style>
-/* Se mantienen tus estilos originales del archivo prestapp2026.html */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
-:root{
-  --bg:#F7F6F2;--bg2:#fff;--border:rgba(0,0,0,0.09);
-  --text:#1A1A18;--text2:#6B6A65;--teal:#0F6E56;--r:12px;--f:'DM Sans',sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--f);background:var(--bg);color:var(--text)}
-.hidden{display:none !important}
-.container{padding:20px;max-width:500px;margin:0 auto}
-.card{background:var(--bg2);border-radius:var(--r);padding:20px;margin-bottom:15px;border:1px solid var(--border)}
-.input-f{width:100%;padding:12px;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;outline:none}
-.btn-primary{width:100%;padding:14px;background:var(--teal);color:#fff;border:none;border-radius:var(--r);font-weight:600;cursor:pointer}
-.tabs{display:flex;gap:10px;margin-bottom:20px;overflow-x:auto;padding-bottom:5px}
-.tab{padding:8px 16px;background:#eee;border-radius:20px;font-size:14px;cursor:pointer;white-space:nowrap}
-.tab.active{background:var(--teal);color:#fff}
-.pago-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
-</style>
-</head>
-<body>
-
-<div id="auth-screen" class="container" style="margin-top:100px; text-align:center">
-  <h2 style="margin-bottom:20px">PrestApp</h2>
-  <input id="l-email" type="email" placeholder="Correo" class="input-f">
-  <input id="l-pass" type="password" placeholder="Contraseña" class="input-f">
-  <button id="btn-login" class="btn-primary">Ingresar</button>
-  <p id="register-link" style="margin-top:15px; font-size:14px; color:var(--teal); cursor:pointer">¿No tienes cuenta? Regístrate</p>
-</div>
-
-<div id="app-screen" class="hidden">
-  <div class="container">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-      <h2 id="user-name">Hola</h2>
-      <button id="btn-logout" style="background:none; border:none; color:red">Salir</button>
-    </div>
-
-    <div id="nav-tabs" class="tabs">
-      <div class="tab active" data-tab="inicio">Inicio</div>
-      <div id="tab-clientes" class="tab hidden" data-tab="clientes">Clientes</div>
-      <div id="tab-usuarios" class="tab hidden" data-tab="usuarios">Usuarios</div>
-    </div>
-
-    <div id="sec-inicio" class="tab-content">
-      <div class="card" id="card-stats">
-        <p style="font-size:12px; color:var(--text2)">Total Prestado</p>
-        <h2 id="stat-total">$ 0</h2>
-      </div>
-      <div id="lista-prestamos"></div>
-      <button id="btn-nuevo-p" class="btn-primary hidden" style="margin-top:10px">+ Nuevo Préstamo</button>
-    </div>
-
-    <div id="sec-clientes" class="tab-content hidden">
-      <h3>Gestión de Préstamos</h3>
-      <div id="admin-p-list"></div>
-    </div>
-
-    <div id="sec-usuarios" class="tab-content hidden">
-      <h3>Validar Nuevos Usuarios</h3>
-      <div id="users-approval-list"></div>
-    </div>
-  </div>
-</div>
-
-<div id="modal-p" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:20px">
-  <div class="card" style="width:100%; max-width:400px">
-    <h3>Nuevo Préstamo</h3>
-    <input id="p-client" type="text" placeholder="Nombre Cliente" class="input-f">
-    <input id="p-monto" type="number" placeholder="Monto" class="input-f">
-    <input id="p-interes" type="number" placeholder="% Interés" class="input-f">
-    <input id="p-cuotas" type="number" placeholder="Cuotas" class="input-f">
-    <button id="btn-save-p" class="btn-primary">Guardar</button>
-    <button id="btn-close-modal" style="width:100%; margin-top:10px; background:none; border:none">Cancelar</button>
-  </div>
-</div>
-
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// ... (Mantén las importaciones y la config de Firebase igual que arriba)
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw",
-  authDomain: "prestasurapp.firebaseapp.com",
-  projectId: "prestasurapp",
-  storageBucket: "prestasurapp.firebasestorage.app",
-  messagingSenderId: "435740234941",
-  appId: "1:435740234941:web:b854210e996f1660ab93d4"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// --- AUTENTICACIÓN ---
-document.getElementById('btn-login').onclick = () => {
-  const e = document.getElementById('l-email').value;
-  const p = document.getElementById('l-pass').value;
-  signInWithEmailAndPassword(auth, e, p).catch(err => alert("Error: " + err.message));
-};
-
-document.getElementById('register-link').onclick = () => {
-  const e = prompt("Correo para registro:");
-  const p = prompt("Contraseña (mínimo 6 caracteres):");
-  if(e && p) {
-    createUserWithEmailAndPassword(auth, e, p).then(async (cred) => {
-      await setDoc(doc(db, "users", cred.user.uid), {
-        email: e,
-        role: 'pending', // Todos empiezan como pendientes
-        nombre: e.split('@')[0]
-      });
-      alert("Registro exitoso. Espera a que el dueño te apruebe.");
-    });
-  }
-};
-
-document.getElementById('btn-logout').onclick = () => signOut(auth);
-
-// --- LÓGICA DE ROLES Y VISTAS ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
+    // Buscamos tu "ficha" en la colección 'users'
     const userDoc = await getDoc(doc(db, "users", user.uid));
-    const userData = userDoc.data();
     
-    if(!userData) return signOut(auth);
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      // Convertimos el rol a minúsculas para que no falle por una mayúscula
+      const rolActual = userData.role ? userData.role.toLowerCase() : 'pending';
 
-    document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('app-screen').classList.remove('hidden');
-    document.getElementById('user-name').innerText = "Hola, " + userData.nombre;
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      document.getElementById('user-name').innerText = "Hola, " + (userData.nombre || "Usuario");
 
-    if(userData.role === 'owner') {
-      document.getElementById('tab-clientes').classList.remove('hidden');
-      document.getElementById('tab-usuarios').classList.remove('hidden');
-      document.getElementById('btn-nuevo-p').classList.remove('hidden');
-      loadAdminData();
-      loadUsersForApproval();
-    } else if (userData.role === 'client') {
-      loadClientData(userData.nombre);
+      // SI ERES DUEÑO (owner)
+      if (rolActual === 'owner') {
+        document.getElementById('tab-clientes').classList.remove('hidden');
+        document.getElementById('tab-usuarios').classList.remove('hidden');
+        document.getElementById('btn-nuevo-p').classList.remove('hidden');
+        document.getElementById('card-stats').classList.remove('hidden');
+        loadAdminData(); // Carga todos los préstamos
+        loadUsersForApproval(); // Carga usuarios pendientes
+      } 
+      // SI ERES CLIENTE
+      else if (rolActual === 'client') {
+        loadClientData(userData.nombre);
+      } 
+      // SI ESTÁS PENDIENTE
+      else {
+        document.getElementById('user-name').innerText = "Esperando aprobación...";
+        document.getElementById('lista-prestamos').innerHTML = "<p style='text-align:center; padding:20px'>Tu cuenta está en revisión. El administrador te activará pronto.</p>";
+      }
     }
   } else {
     document.getElementById('auth-screen').classList.remove('hidden');
@@ -149,7 +40,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- FUNCIONES DE DATOS ---
+// Función para cargar datos de administrador
 function loadAdminData() {
   onSnapshot(collection(db, "prestamos"), (snap) => {
     let total = 0;
@@ -158,58 +49,17 @@ function loadAdminData() {
       const p = doc.data();
       const final = p.monto * (1 + (p.interes/100));
       total += final;
-      html += `<div class="card"><b>${p.cliente}</b><br>Saldo: $${final.toLocaleString()}</div>`;
+      html += `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <b style="text-transform:capitalize">${p.cliente}</b><br>
+            <span style="font-size:12px; color:gray">${p.cuotas} cuotas | ${p.interes}% int.</span>
+          </div>
+          <b style="color:var(--teal)">$${final.toLocaleString()}</b>
+        </div>`;
     });
-    document.getElementById('lista-prestamos').innerHTML = html;
+    document.getElementById('lista-prestamos').innerHTML = html || '<p>No hay préstamos registrados.</p>';
     document.getElementById('stat-total').innerText = "$ " + total.toLocaleString();
   });
 }
-
-function loadUsersForApproval() {
-  const q = query(collection(db, "users"), where("role", "==", "pending"));
-  onSnapshot(q, (snap) => {
-    let html = '';
-    snap.forEach(d => {
-      html += `<div class="pago-item">
-        <span>${d.data().email}</span>
-        <button onclick="aprobarUser('${d.id}', 'client')" style="color:green">Cliente</button>
-      </div>`;
-    });
-    document.getElementById('users-approval-list').innerHTML = html || 'No hay usuarios pendientes.';
-  });
-}
-
-window.aprobarUser = async (id, role) => {
-  await updateDoc(doc(db, "users", id), { role: role });
-};
-
-// --- GESTIÓN DE PESTAÑAS ---
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-    tab.classList.add('active');
-    document.getElementById('sec-' + tab.dataset.tab).classList.remove('hidden');
-  };
-});
-
-// --- MODAL ---
-document.getElementById('btn-nuevo-p').onclick = () => document.getElementById('modal-p').classList.remove('hidden');
-document.getElementById('btn-close-modal').onclick = () => document.getElementById('modal-p').classList.add('hidden');
-
-document.getElementById('btn-save-p').onclick = async () => {
-  const c = document.getElementById('p-client').value;
-  const m = Number(document.getElementById('p-monto').value);
-  const i = Number(document.getElementById('p-interes').value);
-  const ct = Number(document.getElementById('p-cuotas').value);
-
-  if(c && m) {
-    await addDoc(collection(db, "prestamos"), {
-      cliente: c, monto: m, interes: i, cuotas: ct, estado: 'activo'
-    });
-    document.getElementById('modal-p').classList.add('hidden');
-  }
-};
 </script>
-</body>
-</html>
