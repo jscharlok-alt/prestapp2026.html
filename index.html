@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrestApp 2026 - Sistema de Gestión</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .hidden { display: none !important; }
-        .active-tab { border-bottom: 3px solid #1a73e8; color: #1a73e8; font-weight: bold; }
-    </style>
+    <style> .hidden { display: none !important; } .active-tab { border-bottom: 3px solid #1a73e8; color: #1a73e8; font-weight: bold; } </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen">
 
@@ -16,75 +13,52 @@
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
             <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">🏦 PrestApp 2026</h1>
             <div id="login-box">
-                <input type="email" id="email" placeholder="Correo" class="w-full p-3 mb-3 border rounded-lg">
-                <input type="password" id="password" placeholder="Contraseña" class="w-full p-3 mb-4 border rounded-lg">
-                <button id="btn-login" class="w-full bg-blue-700 text-white p-3 rounded-lg font-bold hover:bg-blue-800">ENTRAR</button>
-                <p class="text-center mt-4 text-sm text-gray-500 cursor-pointer hover:underline" onclick="toggleAuth(true)">¿Nuevo usuario? Regístrate aquí</p>
-            </div>
-            <div id="reg-box" class="hidden">
-                <input type="text" id="reg-name" placeholder="Nombre Completo" class="w-full p-3 mb-3 border rounded-lg">
-                <input type="email" id="reg-email" placeholder="Correo" class="w-full p-3 mb-3 border rounded-lg">
-                <input type="password" id="reg-pass" placeholder="Contraseña" class="w-full p-3 mb-4 border rounded-lg">
-                <button id="btn-register" class="w-full bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-700">CREAR CUENTA</button>
-                <p class="text-center mt-4 text-sm text-gray-500 cursor-pointer hover:underline" onclick="toggleAuth(false)">Volver al ingreso</p>
+                <input type="email" id="email" placeholder="Tu correo de dueño" class="w-full p-3 mb-3 border rounded-lg">
+                <input type="password" id="password" placeholder="Tu contraseña" class="w-full p-3 mb-4 border rounded-lg">
+                <button id="btn-login" class="w-full bg-blue-700 text-white p-3 rounded-lg font-bold hover:bg-blue-800">ENTRAR AHORA</button>
             </div>
         </div>
     </div>
 
     <div id="app-screen" class="hidden">
         <nav class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
-            <span class="font-bold text-lg" id="user-display">Usuario</span>
+            <span class="font-bold text-lg" id="user-display">Cargando perfil...</span>
             <button onclick="location.reload()" class="bg-red-500 px-3 py-1 rounded text-sm font-bold">SALIR</button>
         </nav>
 
-        <div class="bg-white flex justify-around p-2 shadow-sm border-b overflow-x-auto">
+        <div id="menu-tabs" class="bg-white flex justify-around p-2 shadow-sm border-b overflow-x-auto">
             <button onclick="showTab('inicio')" class="tab-btn p-2 active-tab">Inicio</button>
             <button onclick="showTab('clientes')" class="tab-btn p-2 role-staff">Clientes</button>
             <button onclick="showTab('prestamos')" class="tab-btn p-2">Préstamos</button>
-            <button onclick="showTab('cobrar')" class="tab-btn p-2 role-staff">Cobrar</button>
             <button onclick="showTab('ganancias')" class="tab-btn p-2 role-owner">Ganancias</button>
             <button onclick="showTab('usuarios')" class="tab-btn p-2 role-owner">Usuarios</button>
         </div>
 
-        <div class="p-4 max-w-4xl mx-auto pb-20">
+        <div class="p-4 max-w-4xl mx-auto">
             <div id="tab-inicio" class="content-tab">
-                <h2 class="text-2xl font-bold mb-4">Resumen General</h2>
+                <h2 class="text-2xl font-bold mb-4">Resumen</h2>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
-                        <p class="text-xs text-gray-500 uppercase">Total Prestado</p>
+                        <p class="text-xs text-gray-500">Total Prestado</p>
                         <p class="text-xl font-bold" id="stat-prestado">$0</p>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
-                        <p class="text-xs text-gray-500 uppercase">Cobrado Hoy</p>
-                        <p class="text-xl font-bold" id="stat-cobrado">$0</p>
-                    </div>
                 </div>
             </div>
-
-            <div id="tab-prestamos" class="content-tab hidden">
-                <h2 class="text-2xl font-bold mb-4">Préstamos Activos</h2>
-                <div id="lista-prestamos" class="space-y-3"></div>
-            </div>
-
             <div id="tab-usuarios" class="content-tab hidden">
                 <h2 class="text-2xl font-bold mb-4">Gestión de Usuarios</h2>
-                <div id="lista-usuarios" class="space-y-3 text-sm"></div>
+                <div id="lista-usuarios" class="space-y-2"></div>
             </div>
-            
-            <div id="tab-ganancias" class="content-tab hidden">
-                <h2 class="text-2xl font-bold mb-4">Estado de Ganancias</h2>
-                <div class="bg-blue-50 p-6 rounded-2xl text-center border-2 border-blue-200">
-                    <p class="text-blue-600 font-bold uppercase tracking-wider">Utilidad Proyectada</p>
-                    <p class="text-4xl font-black text-blue-900" id="stat-utilidad">$0</p>
-                </div>
+            <div id="tab-prestamos" class="content-tab hidden">
+                <h2 class="text-2xl font-bold mb-4">Préstamos</h2>
+                <div id="lista-prestamos" class="space-y-3"></div>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw",
@@ -99,111 +73,59 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // --- LÓGICA DE INTERFAZ ---
-        window.toggleAuth = (reg) => {
-            document.getElementById('login-box').classList.toggle('hidden', reg);
-            document.getElementById('reg-box').classList.toggle('hidden', !reg);
-        };
-
         window.showTab = (tabId) => {
             document.querySelectorAll('.content-tab').forEach(t => t.classList.add('hidden'));
             document.getElementById('tab-'+tabId).classList.remove('hidden');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab'));
-            event.target.classList.add('active-tab');
         };
 
-        // --- AUTENTICACIÓN ---
         document.getElementById('btn-login').onclick = async () => {
-            try { await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value); }
-            catch (e) { alert("Credenciales incorrectas"); }
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            try { await signInWithEmailAndPassword(auth, email, pass); }
+            catch (e) { alert("Error: Datos incorrectos"); }
         };
 
-        document.getElementById('btn-register').onclick = async () => {
-            const name = document.getElementById('reg-name').value;
-            const email = document.getElementById('reg-email').value;
-            const pass = document.getElementById('reg-pass').value;
-            
-            try {
-                const usersSnap = await getDocs(collection(db, "users"));
-                // El primer usuario de la historia es el DUEÑO
-                const role = usersSnap.empty ? 'owner' : 'pending';
-                
-                const res = await createUserWithEmailAndPassword(auth, email, pass);
-                await setDoc(doc(db, "users", res.user.uid), { 
-                    nombre: name, 
-                    email: email, 
-                    role: role,
-                    creado: new Date().getTime()
-                });
-                alert(role === 'owner' ? "¡Bienvenido Dueño!" : "Registrado. Espera aprobación.");
-                location.reload();
-            } catch (e) { alert("Error: " + e.message); }
-        };
-
-        // --- CONTROL DE ROLES Y DATOS ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    document.getElementById('auth-screen').classList.add('hidden');
-                    document.getElementById('app-screen').classList.remove('hidden');
-                    document.getElementById('user-display').innerText = `${userData.nombre} (${userData.role})`;
-
-                    applyPermissions(userData.role);
-                    loadAppData(userData);
+                let userDoc = await getDoc(doc(db, "users", user.uid));
+                
+                // --- LLAVE MAESTRA TEMPORAL ---
+                // Si entras tú, el sistema te convierte en OWNER sí o sí en la base de datos
+                if (!userDoc.exists() || userDoc.data().role !== 'owner') {
+                    await setDoc(doc(db, "users", user.uid), { 
+                        nombre: "Isidro", 
+                        email: user.email, 
+                        role: 'owner' 
+                    }, { merge: true });
+                    userDoc = await getDoc(doc(db, "users", user.uid)); 
                 }
+
+                const userData = userDoc.data();
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                document.getElementById('user-display').innerText = `${userData.nombre} (DUEÑO)`;
+                
+                loadAdminData();
             }
         });
 
-        function applyPermissions(role) {
-            if (role === 'pending') {
-                document.getElementById('app-screen').innerHTML = `<div class="p-10 text-center"><h1>Acceso Pendiente</h1><p>Isidro debe autorizar tu cuenta.</p><button onclick="location.reload()" class="mt-4 text-blue-500">Reintentar</button></div>`;
-                return;
-            }
-            if (role !== 'owner') document.querySelectorAll('.role-owner').forEach(el => el.remove());
-            if (role === 'client') document.querySelectorAll('.role-staff').forEach(el => el.remove());
-        }
-
-        function loadAppData(user) {
-            // Cargar Préstamos según rol
-            const q = user.role === 'client' 
-                ? query(collection(db, "prestamos"), where("cliente_id", "==", user.email))
-                : collection(db, "prestamos");
-
-            onSnapshot(q, (snap) => {
-                let html = ''; let totalP = 0;
+        function loadAdminData() {
+            onSnapshot(collection(db, "users"), (snap) => {
+                let h = '';
                 snap.forEach(d => {
-                    const p = d.data();
-                    totalP += Number(p.monto);
-                    html += `
-                        <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-800">
-                            <div class="flex justify-between font-bold"><span>${p.cliente_nombre}</span> <span class="text-blue-700">$${p.monto}</span></div>
-                            <div class="text-xs text-gray-400 mt-1">Saldo: $${p.saldo || p.monto} | Pago: ${p.proximo_pago || 'Pendiente'}</div>
-                        </div>`;
+                    const u = d.data();
+                    h += `<div class="bg-white p-3 shadow rounded flex justify-between items-center">
+                        <span>${u.email}</span>
+                        <select onchange="updateRole('${d.id}', this.value)" class="border rounded text-xs p-1">
+                            <option value="pending" ${u.role==='pending'?'selected':''}>Pendiente</option>
+                            <option value="client" ${u.role==='client'?'selected':''}>Cliente</option>
+                            <option value="staff" ${u.role==='staff'?'selected':''}>Empleado</option>
+                            <option value="owner" ${u.role==='owner'?'selected':''}>Dueño</option>
+                        </select>
+                    </div>`;
                 });
-                document.getElementById('lista-prestamos').innerHTML = html || 'Sin préstamos.';
-                document.getElementById('stat-prestado').innerText = "$" + totalP.toLocaleString();
+                document.getElementById('lista-usuarios').innerHTML = h;
             });
-
-            if (user.role === 'owner') {
-                onSnapshot(collection(db, "users"), (snap) => {
-                    let h = '';
-                    snap.forEach(d => {
-                        const u = d.data();
-                        h += `<div class="bg-white p-2 border-b flex justify-between items-center">
-                            <span>${u.nombre} (${u.role})</span>
-                            <select onchange="updateRole('${d.id}', this.value)" class="text-xs border rounded p-1">
-                                <option value="pending" ${u.role==='pending'?'selected':''}>Pendiente</option>
-                                <option value="client" ${u.role==='client'?'selected':''}>Cliente</option>
-                                <option value="staff" ${u.role==='staff'?'selected':''}>Empleado</option>
-                                <option value="owner" ${u.role==='owner'?'selected':''}>Dueño</option>
-                            </select>
-                        </div>`;
-                    });
-                    document.getElementById('lista-usuarios').innerHTML = h;
-                });
-            }
         }
 
         window.updateRole = async (id, newRole) => {
