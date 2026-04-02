@@ -5,48 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Préstamos 2026 - Isidro</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        body { font-family: sans-serif; margin: 0; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h1 { color: #1c1e21; text-align: center; font-size: 24px; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 14px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .hidden { display: none !important; }
-        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-primary { background-color: #2c3e50; color: white; }
-        .btn-danger { background-color: #e74c3c; color: white; margin-top: 10px; }
-        .header { background: #2c3e50; color: white; padding: 15px; text-align: center; border-radius: 0 0 20px 20px; }
-        .admin-section { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 10px; margin-top: 20px; }
-        .loan-item { border-left: 5px solid #27ae60; padding-left: 10px; margin: 10px 0; background: #f9f9f9; padding: 10px; border-radius: 4px; }
+        .header { background: #2c3e50; color: white; padding: 15px; width: 100%; position: fixed; top: 0; left: 0; text-align: center; }
+        .content { margin-top: 80px; width: 100%; max-width: 500px; }
+        .loan-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #28a745; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen" class="container">
-        <div class="card" style="text-align: center;">
-            <h1>🏦 Préstamos 2026</h1>
-            <p>Bienvenido al sistema de gestión</p>
-            <input type="email" id="email" placeholder="Tu correo electrónico">
-            <input type="password" id="password" placeholder="Tu contraseña">
-            <button id="btn-login" class="btn-primary">ENTRAR AL SISTEMA</button>
-            <p style="font-size: 0.8em; color: #7f8c8d; margin-top: 15px;">Solo personal autorizado</p>
-        </div>
+    <div id="auth-screen" class="card">
+        <h1>🏦 Préstamos 2026</h1>
+        <p style="text-align:center; color: #65676b;">Control de Créditos</p>
+        <input type="email" id="email" placeholder="Correo electrónico">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button id="btn-login">ENTRAR</button>
     </div>
 
-    <div id="app-screen" class="hidden">
+    <div id="app-screen" class="hidden" style="width: 100%;">
         <div class="header">
-            <h2 id="user-name">Hola, Usuario</h2>
-            <button id="btn-logout" style="width: auto; padding: 5px 15px; background: rgba(255,255,255,0.2); color: white;">Cerrar Sesión</button>
+            <span id="user-name">Hola, Usuario</span> | 
+            <a href="#" id="btn-logout" style="color: #ff4d4d; text-decoration: none; font-weight: bold;">Salir</a>
         </div>
-
-        <div class="container">
-            <div class="card">
-                <h3>💰 Estado de Préstamos</h3>
-                <div id="lista-prestamos">Cargando datos...</div>
+        <div class="content">
+            <div id="admin-panel" class="hidden" style="background: #fff3cd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ffeeba;">
+                <h3>🛠️ PANEL DE ISIDRO</h3>
+                <div id="lista-usuarios">Cargando usuarios...</div>
             </div>
-
-            <div id="admin-panel" class="admin-section hidden">
-                <h3>🛠️ Panel de Control (Isidro)</h3>
-                <p>Gestión de usuarios y solicitudes:</p>
-                <div id="lista-usuarios">Buscando usuarios...</div>
+            
+            <div class="card">
+                <h3>💰 Mis Préstamos</h3>
+                <div id="lista-prestamos">Buscando datos en la nube...</div>
             </div>
         </div>
     </div>
@@ -67,3 +60,67 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // CONFIGURACIÓN DE TU ACCESO (ISIDRO)
+        const ADMIN_EMAIL = "isidrogonzalez85@gmail.com"; // <-- ASEGÚRATE QUE SEA ESTE TU CORREO
+
+        document.getElementById('btn-login').onclick = async () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            try {
+                await signInWithEmailAndPassword(auth, e, p);
+            } catch (err) {
+                alert("Error al entrar: " + err.message);
+            }
+        };
+
+        document.getElementById('btn-logout').onclick = () => signOut(auth);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+
+                // LÓGICA DE ACCESO AUTOMÁTICO PARA TI
+                if (user.email === ADMIN_EMAIL) {
+                    document.getElementById('user-name').innerText = "Hola, Isidro (Dueño)";
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    loadData(true, user.email);
+                } else {
+                    document.getElementById('user-name').innerText = "Hola, Cliente";
+                    loadData(false, user.email);
+                }
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('app-screen').classList.add('hidden');
+            }
+        });
+
+        function loadData(isAdmin, email) {
+            // Cargar Préstamos
+            const q = isAdmin ? collection(db, "prestamos") : query(collection(db, "prestamos"), where("cliente_email", "==", email));
+            onSnapshot(q, (snap) => {
+                let h = '';
+                snap.forEach(d => {
+                    const p = d.data();
+                    h += `<div class="loan-card"><b>${p.cliente || 'Préstamo'}</b><br>Monto: $${p.monto}</div>`;
+                });
+                document.getElementById('lista-prestamos').innerHTML = h || 'No hay datos registrados.';
+            });
+
+            // Cargar Usuarios si es Admin
+            if (isAdmin) {
+                onSnapshot(collection(db, "users"), (snap) => {
+                    let h = '';
+                    snap.forEach(d => {
+                        const u = d.data();
+                        h += `<div style="font-size:14px; border-bottom:1px solid #ccc; padding:5px;">👤 ${u.email} (${u.role})</div>`;
+                    });
+                    document.getElementById('lista-usuarios').innerHTML = h;
+                });
+            }
+        }
+    </script>
+</body>
+</html>
