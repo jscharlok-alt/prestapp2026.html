@@ -1,4 +1,30 @@
+<div id="auth-screen">
+    <div style="text-align:center; padding: 50px; font-family: Arial, sans-serif;">
+        <h1 style="color: #2c3e50;">🏦 Préstamos 2026</h1>
+        <p>Inicia sesión para gestionar tus créditos</p>
+        </div>
+</div>
+
+<div id="app-screen" style="display:none; font-family: Arial, sans-serif;">
+    <div style="background: #2c3e50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <strong id="user-name">Cargando...</strong>
+        <button onclick="location.reload()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Cerrar Sesión</button>
+    </div>
+
+    <div style="padding: 20px;">
+        <h3>💰 Mis Préstamos</h3>
+        <div id="lista-prestamos"></div>
+    </div>
+
+    <div class="admin-only" style="display:none; padding: 20px; background: #ecf0f1; margin-top: 20px; border-radius: 10px;">
+        <h3 style="color: #2980b9;">🛠️ Panel de Control (Isidro)</h3>
+        <div id="lista-usuarios"></div>
+    </div>
+</div>
+
 <script type="module">
+  // Aquí sigue todo tu código de Firebase...
+  <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, addDoc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
