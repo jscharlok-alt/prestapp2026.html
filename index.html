@@ -3,43 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PrestApp</title>
+<title>PrestApp - Dashboard</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
 :root{
   --bg:#F7F6F2;--bg2:#fff;--border:rgba(0,0,0,0.09);
-  --text:#1A1A18;--text2:#6B6A65;--teal:#0F6E56;
-  --red:#A32D2D;--red-bg:#FCEBEB;--red-text:#791F1F;
-  --r:12px;--rs:8px;--f:'DM Sans',sans-serif;
+  --text:#1A1A18;--text2:#6B6A65;--teal:#0F6E56;--r:12px;--f:'DM Sans',sans-serif;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--f);background:var(--bg);color:var(--text);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:30px;width:100%;max-width:380px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.05)}
-.auth-logo{font-size:28px;font-weight:600;text-align:center;margin-bottom:8px}
+body{font-family:var(--f);background:var(--bg);margin:0;padding:0}
+#app-screen{display:none;padding:20px}
+.topbar{background:var(--bg2);padding:15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.card{background:var(--bg2);border-radius:var(--r);padding:20px;margin-bottom:20px;border:1px solid var(--border)}
+.auth-logo{font-size:22px;font-weight:600}
 .auth-logo span{color:var(--teal)}
-.auth-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:24px}
-.auth-input{width:100%;padding:12px;border:1px solid var(--border);border-radius:var(--rs);margin-bottom:15px;outline:none;font-size:15px}
-.auth-btn{width:100%;padding:14px;background:var(--teal);color:#fff;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;transition:opacity 0.2s}
-.auth-btn:active{opacity:0.8}
-#auth-error{background:var(--red-bg);color:var(--red-text);padding:12px;border-radius:var(--rs);font-size:13px;margin-bottom:15px;display:none;text-align:center}
+.btn-logout{background:none;border:none;color:#A32D2D;font-weight:600;cursor:pointer}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.stat-card{background:var(--teal);color:#fff;padding:15px;border-radius:var(--r)}
+.stat-val{font-size:20px;font-weight:600}
 </style>
 </head>
 <body>
 
-<div class="auth-card">
-  <div class="auth-logo">Prest<span>App</span></div>
-  <div class="auth-sub">Sistema de gestión de préstamos</div>
-  <div id="auth-error"></div>
-  
-  <input id="l-email" type="email" class="auth-input" placeholder="Correo electrónico">
-  <input id="l-pass" type="password" class="auth-input" placeholder="Contraseña">
-  
-  <button class="auth-btn" onclick="doLogin()">Ingresar</button>
+<div id="app-screen">
+  <div class="topbar">
+    <div class="auth-logo">Prest<span>App</span></div>
+    <button class="btn-logout" onclick="location.reload()">Cerrar Sesión</button>
+  </div>
+
+  <div style="margin-top:20px">
+    <h2>Hola, Isidro 👋</h2>
+    <p style="color:var(--text2)">Este es el resumen de tu operación logística de préstamos.</p>
+  </div>
+
+  <div class="stat-grid" style="margin-top:20px">
+    <div class="stat-card">
+      <div style="font-size:12px opacity:0.8">Total Prestado</div>
+      <div class="stat-val">$ 0.00</div>
+    </div>
+    <div class="stat-card" style="background:#fff; color:var(--text); border:1px solid var(--border)">
+      <div style="font-size:12px; color:var(--text2)">Cobros Hoy</div>
+      <div class="stat-val">$ 0.00</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h3>Préstamos Activos</h3>
+    <p style="color:var(--text2); font-size:14px; margin-top:10px">No hay datos para mostrar todavía. Comienza agregando un cliente.</p>
+    <button style="margin-top:15px; width:100%; padding:12px; background:var(--teal); color:#fff; border:none; border-radius:8px; font-weight:600">+ Nuevo Préstamo</button>
+  </div>
+</div>
+
+<div id="auth-screen" style="display:flex; justify-content:center; align-items:center; min-height:100vh">
+  <div style="background:#fff; padding:30px; border-radius:12px; width:350px; text-align:center; border:1px solid var(--border)">
+    <div class="auth-logo" style="margin-bottom:20px">Prest<span>App</span></div>
+    <input id="l-email" type="email" placeholder="Correo" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid var(--border); border-radius:8px">
+    <input id="l-pass" type="password" placeholder="Clave" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid var(--border); border-radius:8px">
+    <button onclick="doLogin()" style="width:100%; padding:12px; background:var(--teal); color:#fff; border:none; border-radius:8px; font-weight:600">Ingresar</button>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw",
@@ -53,27 +78,28 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// Función de Login corregida para CAMBIAR de pantalla
 window.doLogin = async () => {
   const email = document.getElementById('l-email').value;
   const pass = document.getElementById('l-pass').value;
-  const errorDiv = document.getElementById('auth-error');
-  
-  errorDiv.style.display = "none";
-
-  if (!email || !pass) {
-    errorDiv.textContent = "Por favor, llena todos los campos.";
-    errorDiv.style.display = "block";
-    return;
-  }
-
   try {
     await signInWithEmailAndPassword(auth, email, pass);
-    alert("¡Bienvenido Isidro!"); 
+    // No hace falta alert, el observador de abajo se encarga
   } catch (e) {
-    errorDiv.textContent = "Correo o contraseña incorrectos.";
-    errorDiv.style.display = "block";
+    alert("Error: " + e.message);
   }
 };
+
+// ESTO ES LO QUE HACE QUE LA PANTALLA CAMBIE AUTOMÁTICAMENTE
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
