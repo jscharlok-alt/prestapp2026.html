@@ -1,141 +1,69 @@
-<div id="auth-screen">
-    <div style="text-align:center; padding: 50px; font-family: Arial, sans-serif;">
-        <h1 style="color: #2c3e50;">🏦 Préstamos 2026</h1>
-        <p>Inicia sesión para gestionar tus créditos</p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Préstamos 2026 - Isidro</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        .hidden { display: none !important; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-primary { background-color: #2c3e50; color: white; }
+        .btn-danger { background-color: #e74c3c; color: white; margin-top: 10px; }
+        .header { background: #2c3e50; color: white; padding: 15px; text-align: center; border-radius: 0 0 20px 20px; }
+        .admin-section { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .loan-item { border-left: 5px solid #27ae60; padding-left: 10px; margin: 10px 0; background: #f9f9f9; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen" class="container">
+        <div class="card" style="text-align: center;">
+            <h1>🏦 Préstamos 2026</h1>
+            <p>Bienvenido al sistema de gestión</p>
+            <input type="email" id="email" placeholder="Tu correo electrónico">
+            <input type="password" id="password" placeholder="Tu contraseña">
+            <button id="btn-login" class="btn-primary">ENTRAR AL SISTEMA</button>
+            <p style="font-size: 0.8em; color: #7f8c8d; margin-top: 15px;">Solo personal autorizado</p>
         </div>
-</div>
-
-<div id="app-screen" style="display:none; font-family: Arial, sans-serif;">
-    <div style="background: #2c3e50; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-        <strong id="user-name">Cargando...</strong>
-        <button onclick="location.reload()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Cerrar Sesión</button>
     </div>
 
-    <div style="padding: 20px;">
-        <h3>💰 Mis Préstamos</h3>
-        <div id="lista-prestamos"></div>
+    <div id="app-screen" class="hidden">
+        <div class="header">
+            <h2 id="user-name">Hola, Usuario</h2>
+            <button id="btn-logout" style="width: auto; padding: 5px 15px; background: rgba(255,255,255,0.2); color: white;">Cerrar Sesión</button>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <h3>💰 Estado de Préstamos</h3>
+                <div id="lista-prestamos">Cargando datos...</div>
+            </div>
+
+            <div id="admin-panel" class="admin-section hidden">
+                <h3>🛠️ Panel de Control (Isidro)</h3>
+                <p>Gestión de usuarios y solicitudes:</p>
+                <div id="lista-usuarios">Buscando usuarios...</div>
+            </div>
+        </div>
     </div>
 
-    <div class="admin-only" style="display:none; padding: 20px; background: #ecf0f1; margin-top: 20px; border-radius: 10px;">
-        <h3 style="color: #2980b9;">🛠️ Panel de Control (Isidro)</h3>
-        <div id="lista-usuarios"></div>
-    </div>
-</div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<script type="module">
-  // Aquí sigue todo tu código de Firebase...
-  <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, addDoc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw",
+            authDomain: "prestapp2026-html.firebaseapp.com",
+            projectId: "prestapp2026-html",
+            storageBucket: "prestapp2026-html.appspot.com",
+            messagingSenderId: "847250631332",
+            appId: "1:847250631332:web:6570629705a266580a656a"
+        };
 
-// Credenciales recuperadas de tu historial de GitHub
-const firebaseConfig = {
-  apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw" ,
-  authDomain: "prestapp2026-html.firebaseapp.com",
-  projectId: "prestapp2026-html",
-  storageBucket: "prestapp2026-html.appspot.com",
-  messagingSenderId: "847250631332",
-  appId: "1:847250631332:web:6570629705a266580a656a"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// --- LÓGICA DE ESTADO DE USUARIO ---
-onAuthStateChanged(auth, async (user) => {
-  const authScreen = document.getElementById('auth-screen');
-  const appScreen = document.getElementById('app-screen');
-
-  if (user) {
-    try {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        const rolLimpio = (userData.role || 'pending').toLowerCase();
-
-        authScreen.classList.add('hidden');
-        appScreen.classList.remove('hidden');
-        document.getElementById('user-name').innerText = "Hola, " + (userData.nombre || "Usuario");
-
-        if (rolLimpio === 'owner') {
-          document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-          loadAdminData();
-          loadUsersForApproval();
-        } else {
-          document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
-          loadClientData(userData.nombre);
-        }
-      } else {
-        // Si el usuario es nuevo y no tiene "ficha" en la base de datos
-        authScreen.classList.add('hidden');
-        appScreen.classList.remove('hidden');
-        document.getElementById('user-name').innerText = "Usuario Nuevo";
-        document.getElementById('lista-prestamos').innerHTML = "<p style='text-align:center; padding:20px'>Tu cuenta está siendo revisada por el administrador.</p>";
-      }
-    } catch (e) {
-      console.error("Error al obtener usuario:", e);
-    }
-  } else {
-    // ESTO ES LO QUE VERÁ EL CLIENTE SI NO HA INICIADO SESIÓN
-    authScreen.classList.remove('hidden');
-    appScreen.classList.add('hidden');
-  }
-});
-
-// --- FUNCIONES DE CARGA ---
-async function loadAdminData() {
-  onSnapshot(collection(db, "prestamos"), (snap) => {
-    let total = 0;
-    let html = '';
-    snap.forEach(doc => {
-      const p = doc.data();
-      total += Number(p.monto || 0);
-      html += `<div class="card"><b>${p.cliente}</b>: $${p.monto}</div>`;
-    });
-    document.getElementById('lista-prestamos').innerHTML = html || '<p>Sin préstamos registrados.</p>';
-    if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = "$" + total.toLocaleString();
-  });
-}
-
-async function loadClientData(nombre) {
-  const q = query(collection(db, "prestamos"), where("cliente", "==", nombre));
-  onSnapshot(q, (snap) => {
-    let html = '';
-    snap.forEach(doc => {
-      html += `<div class="card">Tu préstamo: $${Number(doc.data().monto).toLocaleString()}</div>`;
-    });
-    document.getElementById('lista-prestamos').innerHTML = html || '<p>No tienes préstamos activos.</p>';
-  });
-}
-
-async function loadUsersForApproval() {
-  onSnapshot(collection(db, "users"), (snap) => {
-    let html = '';
-    snap.forEach(doc => {
-      const u = doc.data();
-      if(u.role !== 'owner') {
-        html += `<div class="card" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center">
-          <span>${u.email} <b>(${u.role || 'pending'})</b></span>
-          <select onchange="updateUserRole('${doc.id}', this.value)" style="padding:5px">
-            <option value="pending" ${u.role === 'pending' ? 'selected' : ''}>Pendiente</option>
-            <option value="client" ${u.role === 'client' ? 'selected' : ''}>Cliente</option>
-          </select>
-        </div>`;
-      }
-    });
-    const lista = document.getElementById('lista-usuarios');
-    if(lista) lista.innerHTML = html;
-  });
-}
-
-window.updateUserRole = async (id, nuevoRol) => {
-  try {
-    await updateDoc(doc(db, "users", id), { role: nuevoRol });
-    alert("Rol actualizado con éxito");
-  } catch (e) {
-    alert("Error al actualizar: " + e.message);
-  }
-};
-</script>
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
