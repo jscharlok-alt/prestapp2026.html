@@ -62,4 +62,52 @@ function loadAdminData() {
     document.getElementById('stat-total').innerText = "$ " + total.toLocaleString();
   });
 }
+  // --- FUNCIÓN PARA LA VISTA DEL CLIENTE ---
+function loadClientData(nombreCliente) {
+  const listaPrestamos = document.getElementById('lista-prestamos');
+  // Buscamos solo los préstamos que pertenecen a este cliente
+  const q = query(collection(db, "prestamos"), where("cliente", "==", nombreCliente));
+  
+  onSnapshot(q, (snap) => {
+    let html = '';
+    snap.forEach(doc => {
+      const p = doc.data();
+      const final = p.monto * (1 + (p.interes/100));
+      html += `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between">
+            <b>Préstamo Activo</b>
+            <span style="color:var(--teal)">$${final.toLocaleString()}</span>
+          </div>
+          <p style="font-size:12px; color:gray">${p.cuotas} cuotas pendientes</p>
+        </div>`;
+    });
+    listaPrestamos.innerHTML = html || '<p style="text-align:center">No tienes préstamos activos aún.</p>';
+  });
+}
+
+// --- FUNCIÓN PARA VER USUARIOS (La que usas en tu imagen) ---
+function loadUsersForApproval() {
+  onSnapshot(collection(db, "users"), (snap) => {
+    let html = '';
+    snap.forEach(doc => {
+      const u = doc.data();
+      if(u.role !== 'owner') { // No te muestras a ti mismo para no borrarte por error
+        html += `
+          <div class="card" style="display:flex; justify-content:space-between; align-items:center">
+            <div>
+              <b>${u.nombre || 'Sin nombre'}</b><br>
+              <span style="font-size:12px">${u.email}</span>
+            </div>
+            <select onchange="updateUserRole('${doc.id}', this.value)" style="padding:5px; border-radius:8px">
+              <option value="pending" ${u.role === 'pending' ? 'selected' : ''}>Pendiente</option>
+              <option value="client" ${u.role === 'client' ? 'selected' : ''}>Cliente</option>
+            </select>
+          </div>`;
+      }
+    });
+    const listaUsuarios = document.getElementById('lista-usuarios'); // Asegúrate de tener este ID en tu HTML
+    if(listaUsuarios) listaUsuarios.innerHTML = html;
+  });
+}
 </script>
