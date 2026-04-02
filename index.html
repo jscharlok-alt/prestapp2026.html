@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PrestApp Pro - Isidro</title>
+<title>PrestApp Pro - Sistema de Roles</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
 :root{
@@ -11,38 +11,28 @@
   --text:#1A1A18;--text2:#6B6A65;--teal:#0F6E56;--r:12px;--f:'DM Sans',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--f);background:var(--bg);color:var(--text);overflow-x:hidden}
+body{font-family:var(--f);background:var(--bg);color:var(--text)}
 
-/* LOGIN */
-#auth-screen{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
-.auth-box{background:#fff;padding:30px;border-radius:var(--r);width:100%;max-width:350px;border:1px solid var(--border);text-align:center}
+/* ESTILOS DE NAVEGACIÓN SEGÚN ROL */
+.only-owner, .only-staff, .only-client { display: none; }
 
-/* APP LAYOUT */
 #app-screen{display:none}
 .topbar{background:var(--bg2);padding:15px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
 .auth-logo{font-size:22px;font-weight:600}.auth-logo span{color:var(--teal)}
 .container{padding:20px;max-width:500px;margin:0 auto}
 
-/* CARDS & STATS */
-.card{background:var(--bg2);border-radius:var(--r);padding:20px;margin-bottom:20px;border:1px solid var(--border);box-shadow:0 2px 4px rgba(0,0,0,0.02)}
+.card{background:var(--bg2);border-radius:var(--r);padding:20px;margin-bottom:20px;border:1px solid var(--border)}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:20px}
 .stat-card{background:var(--teal);color:#fff;padding:15px;border-radius:var(--r)}
 .stat-val{font-size:22px;font-weight:600}
 
-/* LISTA */
-.item-p{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
-.item-p:last-child{border:0}
-.p-name{font-weight:600;display:block}
-.p-sub{font-size:12px;color:var(--text2)}
-
-/* FORM & BUTTONS */
-.input-f{width:100%;padding:12px;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;outline:none;font-family:var(--f)}
 .btn-primary{width:100%;padding:14px;background:var(--teal);color:#fff;border:none;border-radius:var(--r);font-weight:600;cursor:pointer}
 .btn-sec{background:none;border:none;color:#A32D2D;font-weight:600;cursor:pointer}
 
-/* MODAL */
-#modal-p{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;padding:20px;z-index:100}
-.modal-c{background:#fff;padding:25px;border-radius:var(--r);width:100%;max-width:400px}
+/* LOGIN */
+#auth-screen{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.auth-box{background:#fff;padding:30px;border-radius:var(--r);width:100%;max-width:350px;border:1px solid var(--border);text-align:center}
+.input-f{width:100%;padding:12px;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;outline:none}
 </style>
 </head>
 <body>
@@ -63,48 +53,36 @@ body{font-family:var(--f);background:var(--bg);color:var(--text);overflow-x:hidd
   </div>
 
   <div class="container">
-    <h2 style="margin-bottom:5px">Hola, Isidro 👋</h2>
-    <p style="color:var(--text2); margin-bottom:20px">Resumen de préstamos activos</p>
+    <h2 id="welcome-msg">Cargando...</h2>
+    <p id="role-tag" style="font-size:12px; color:var(--teal); font-weight:600; margin-bottom:20px; text-transform: uppercase;"></p>
 
-    <div class="stat-grid">
+    <div class="stat-grid only-staff only-owner">
       <div class="stat-card">
         <p style="font-size:12px; opacity:0.8">En la calle</p>
         <div id="total-out" class="stat-val">$ 0</div>
       </div>
-      <div class="stat-card" style="background:#fff; color:var(--text); border:1px solid var(--border)">
-        <p style="font-size:12px; color:var(--text2)">Clientes</p>
-        <div id="total-clients" class="stat-val">0</div>
+      <div class="stat-card only-owner" style="background:#1A1A18">
+        <p style="font-size:12px; opacity:0.8">Ganancias Est.</p>
+        <div id="total-profit" class="stat-val">$ 0</div>
       </div>
     </div>
 
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-        <h3 style="font-size:16px">Lista de Clientes</h3>
-        <button onclick="openM()" style="color:var(--teal); background:none; border:none; font-weight:600">+ Nuevo</button>
-      </div>
-      <div id="p-list">
-        <p style="text-align:center; color:var(--text2); font-size:14px">Cargando datos...</p>
-      </div>
+    <div class="card only-staff only-owner">
+      <h3 style="margin-bottom:15px">Gestión de Clientes</h3>
+      <div id="admin-list">Cargando préstamos globales...</div>
     </div>
-  </div>
-</div>
 
-<div id="modal-p">
-  <div class="modal-c">
-    <h3 style="margin-bottom:15px">Nuevo Préstamo</h3>
-    <input id="p-name" type="text" placeholder="Nombre del cliente" class="input-f">
-    <input id="p-amt" type="number" placeholder="Monto" class="input-f">
-    <input id="p-int" type="number" placeholder="% Interés" class="input-f">
-    <input id="p-cts" type="number" placeholder="Cuotas" class="input-f">
-    <button onclick="saveP()" class="btn-primary">Guardar</button>
-    <button onclick="closeM()" class="btn-sec" style="width:100%; margin-top:10px">Cancelar</button>
+    <div class="card only-client">
+      <h3 style="margin-bottom:15px">Mi Préstamo</h3>
+      <div id="client-view">Buscando tu información...</div>
+    </div>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw",
@@ -119,74 +97,63 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// LOGIN & LOGOUT
 window.doLogin = () => {
   const e = document.getElementById('l-email').value;
   const p = document.getElementById('l-pass').value;
-  signInWithEmailAndPassword(auth, e, p).catch(() => alert("Error de acceso"));
+  signInWithEmailAndPassword(auth, e, p).catch(() => alert("Credenciales incorrectas"));
 };
 window.doLogout = () => signOut(auth);
 
-// UI MODAL
-window.openM = () => document.getElementById('modal-p').style.display='flex';
-window.closeM = () => document.getElementById('modal-p').style.display='none';
-
-// GUARDAR
-window.saveP = async () => {
-  const n = document.getElementById('p-name').value;
-  const m = document.getElementById('p-amt').value;
-  const i = document.getElementById('p-int').value;
-  const c = document.getElementById('p-cts').value;
-
-  if(!n || !m) return alert("Faltan datos");
-
-  try {
-    await addDoc(collection(db, "prestamos"), {
-      cliente: n, monto: Number(m), interes: Number(i), cuotas: Number(c), 
-      fecha: serverTimestamp()
-    });
-    closeM();
-    document.querySelectorAll('.input-f').forEach(input => input.value = '');
-  } catch(e) { alert("Error al guardar"); }
-};
-
-// ESCUCHAR DATOS (Tiempo Real)
-onAuthStateChanged(auth, (user) => {
-  const appS = document.getElementById('app-screen');
-  const authS = document.getElementById('auth-screen');
-  
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    appS.style.display = 'block';
-    authS.style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
     
-    // Cargar préstamos
-    const q = query(collection(db, "prestamos"), orderBy("fecha", "desc"));
-    onSnapshot(q, (snapshot) => {
-      let html = '';
-      let total = 0;
-      snapshot.forEach(doc => {
-        const p = doc.data();
-        const totalConInt = p.monto * (1 + p.interes / 100);
-        total += totalConInt;
-        html += `
-          <div class="item-p">
-            <div>
-              <span class="p-name">${p.cliente}</span>
-              <span class="p-sub">${p.cuotas} cuotas | ${p.interes}% int.</span>
-            </div>
-            <div style="text-align:right">
-              <span style="font-weight:600">$ ${totalConInt.toLocaleString()}</span>
-            </div>
-          </div>`;
+    // 1. OBTENER ROL
+    const userDoc = await getDoc(doc(db, "usuarios", user.email));
+    const userData = userDoc.exists() ? userDoc.data() : { rol: 'cliente' };
+    const rol = userData.rol;
+
+    document.getElementById('welcome-msg').innerText = "Hola, " + (user.displayName || user.email.split('@')[0]);
+    document.getElementById('role-tag').innerText = rol;
+
+    // 2. MOSTRAR ELEMENTOS SEGÚN ROL
+    document.querySelectorAll('.only-' + rol).forEach(el => el.style.display = 'block');
+    if(rol === 'owner') { // Si es dueño también ve lo de staff
+       document.querySelectorAll('.only-staff').forEach(el => el.style.display = 'block');
+       document.querySelectorAll('.only-owner').forEach(el => el.style.display = 'block');
+    }
+
+    // 3. CARGAR DATOS SEGÚN ROL
+    if (rol === 'owner' || rol === 'staff') {
+      onSnapshot(collection(db, "prestamos"), (snap) => {
+        let html = ''; let total = 0; let profit = 0;
+        snap.forEach(d => {
+          const p = d.data();
+          const t = p.monto * (1 + p.interes/100);
+          total += t; profit += (p.monto * p.interes/100);
+          html += `<p><b>${p.cliente}</b>: $${t.toLocaleString()}</p>`;
+        });
+        document.getElementById('admin-list').innerHTML = html;
+        document.getElementById('total-out').innerText = '$ ' + total.toLocaleString();
+        document.getElementById('total-profit').innerText = '$ ' + profit.toLocaleString();
       });
-      document.getElementById('p-list').innerHTML = html || 'No hay préstamos.';
-      document.getElementById('total-out').innerText = '$ ' + total.toLocaleString();
-      document.getElementById('total-clients').innerText = snapshot.size;
-    });
+    } else {
+      // Lógica para que el cliente vea solo su préstamo por nombre
+      const q = query(collection(db, "prestamos"), where("cliente", "==", user.email.split('@')[0]));
+      onSnapshot(q, (snap) => {
+        let html = '';
+        snap.forEach(d => {
+          const p = d.data();
+          html += `<p>Saldo total: $${(p.monto * (1 + p.interes/100)).toLocaleString()}</p>`;
+        });
+        document.getElementById('client-view').innerHTML = html || 'No tienes préstamos activos.';
+      });
+    }
 
   } else {
-    appS.style.display = 'none';
-    authS.style.display = 'flex';
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
   }
 });
 </script>
