@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PrestApp</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+:root{
+  --bg:#F7F6F2;--bg2:#fff;--border:rgba(0,0,0,0.09);
+  --text:#1A1A18;--text2:#6B6A65;--teal:#0F6E56;
+  --red:#A32D2D;--red-bg:#FCEBEB;--red-text:#791F1F;
+  --r:12px;--rs:8px;--f:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--text);display:flex;justify-content:center;align-items:center;min-height:100vh}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;width:100%;max-width:350px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)}
+.auth-logo{font-size:24px;font-weight:600;text-align:center;margin-bottom:8px}
+.auth-logo span{color:var(--teal)}
+.auth-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:24px}
+.auth-group{margin-bottom:16px}
+.auth-label{font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:6px}
+.auth-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--rs);outline:none;font-family:var(--f)}
+.auth-btn{width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:var(--r);font-weight:600;cursor:pointer;margin-top:8px}
+.auth-error{background:var(--red-bg);color:var(--red-text);padding:10px;border-radius:var(--rs);font-size:12px;margin-bottom:16px;display:none}
+</style>
+</head>
+<body>
+
+<div class="auth-card">
+  <div class="auth-logo">Prest<span>App</span></div>
+  <div class="auth-sub">Ingresa a tu cuenta</div>
+  <div id="auth-error" class="auth-error"></div>
+  
+  <div class="auth-group">
+    <label class="auth-label">Correo electrónico</label>
+    <input id="l-email" type="email" class="auth-input" placeholder="tu@correo.com">
+  </div>
+  <div class="auth-group">
+    <label class="auth-label">Contraseña</label>
+    <input id="l-pass" type="password" class="auth-input" placeholder="••••••••">
+  </div>
+  <button class="auth-btn" onclick="doLogin()">Ingresar</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC-92ttHW5TqIOMto5H3tKu44n7H_crVAw",
+  authDomain: "prestasurapp.firebaseapp.com",
+  projectId: "prestasurapp",
+  storageBucket: "prestasurapp.firebasestorage.app",
+  messagingSenderId: "435740234941",
+  appId: "1:435740234941:web:b854210e996f1660ab93d4"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.doLogin = async () => {
+  const email = document.getElementById('l-email').value;
+  const pass = document.getElementById('l-pass').value;
+  const err = document.getElementById('auth-error');
+  
+  if(!email || !pass) {
+    err.textContent = "Completa todos los campos";
+    err.style.display = "block";
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    alert("¡Ingreso exitoso!");
+  } catch (e) {
+    err.textContent = "Usuario o clave incorrectos";
+    err.style.display = "block";
+  }
+};
+</script>
+</body>
+</html>
